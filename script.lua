@@ -1,97 +1,100 @@
--- Настройки
 local ADM_KEY = "adminkey"
 local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
 
--- Создание UI
+-- СОЗДАНИЕ МЕНЮ (СТИЛЬ IY)
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 260, 0, 130)
-Main.Position = UDim2.new(0.5, -130, 0.2, 0)
-Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Main.Active = true
-Main.Draggable = true 
+local Holder = Instance.new("Frame", ScreenGui)
+Holder.Size = UDim2.new(0, 250, 0, 30)
+Holder.Position = UDim2.new(0.5, -125, 0.1, 0)
+Holder.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
+Holder.BorderSizePixel = 0
+Holder.Active = true
+Holder.Draggable = true
 
-local Corner = Instance.new("UICorner", Main)
-Corner.CornerRadius = ToolPunchItem.new(0, 10)
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "ВВЕДИТЕ КЛЮЧ"
+local Title = Instance.new("TextLabel", Holder)
+Title.Size = UDim2.new(1, -30, 1, 0)
+Title.Position = UDim2.new(0, 5, 0, 0)
+Title.Text = "IY CLONE (ENTER KEY)"
 Title.TextColor3 = Color3.new(1, 1, 1)
-Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Instance.new("UICorner", Title)
+Title.BackgroundTransparency = 1
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.SourceSans
 
-local Input = Instance.new("TextBox", Main)
-Input.Size = UDim2.new(0.9, 0, 0, 40)
-Input.Position = UDim2.new(0.05, 0, 0.45, 0)
-Input.PlaceholderText = "Ключ или Команда..."
-Input.Text = ""
-Input.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+local Input = Instance.new("TextBox", Holder)
+Input.Size = UDim2.new(1, 0, 0, 30)
+Input.Position = UDim2.new(0, 0, 1, 0)
+Input.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+Input.BorderSizePixel = 0
 Input.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", Input)
+Input.PlaceholderText = "Command Bar..."
+Input.Text = ""
+Input.Font = Enum.Font.SourceSans
+Input.TextSize = 18
 
--- Функционал
-local flying = false
-local flyBV = nil
+-- ПЕРЕМЕННЫЕ ФУНКЦИЙ
+local flySpeed = 0
+local flyConnection = nil
+local bodyVel = nil
 
+-- Функция Fly как в IY
 local function setFly(speed)
+    flySpeed = speed
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     
-    if flyBV then flyBV:Destroy() end
-    
+    if bodyVel then bodyVel:Destroy() end
+    if flyConnection then flyConnection:Disconnect() end
+
     if speed > 0 then
-        flying = true
-        flyBV = Instance.new("BodyVelocity", char.HumanoidRootPart)
-        flyBV.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+        bodyVel = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bodyVel.MaxForce = Vector3.new(1e6, 1e6, 1e6)
         
-        task.spawn(function()
-            while flying and char:FindFirstChild("HumanoidRootPart") do
-                -- Летим по направлению взгляда (удобно для тачскрина)
-                flyBV.Velocity = camera.CFrame.LookVector * (speed * 3)
-                task.wait()
+        flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                bodyVel.Velocity = camera.CFrame.LookVector * (flySpeed * 2.5)
             end
         end)
-    else
-        flying = false
     end
 end
 
--- Обработка ввода (Enter на клавиатуре телефона)
-Input.FocusLost:Connect(function(enterPressed)
-    if not enterPressed then return end
+-- Обработка ввода
+Input.FocusLost:Connect(function(enter)
+    if not enter then return end
+    local raw = Input.Text:lower()
     
-    local text = Input.Text:lower()
-    local args = string.split(text, " ")
-    local cmd = args[1]
-    local val = tonumber(args[2]) -- Считывает любое введенное число
-
-    if Title.Text == "ВВЕДИТЕ КЛЮЧ" then
-        if text == ADM_KEY then
-            Title.Text = "fly [1-100], jump [1-100], chams"
-            Input.PlaceholderText = "Например: fly 29"
+    -- Проверка ключа
+    if Title.Text == "IY CLONE (ENTER KEY)" then
+        if raw == ADM_KEY then
+            Title.Text = "Infinite Yield Lite"
+            Input.PlaceholderText = "fly [1-100], jp [1-100], chams"
         else
-            Input.Text = "НЕВЕРНО"
+            Input.Text = "WRONG KEY"
             task.wait(1)
         end
     else
-        -- Свободный ввод значений
+        -- Команды
+        local args = string.split(raw, " ")
+        local cmd = args[1]
+        local val = tonumber(args[2])
+
         if cmd == "fly" then
             setFly(val or 0)
-        elseif cmd == "jump" then
+        elseif cmd == "jp" or cmd == "jump" then
             if val and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.JumpPower = val * 2.5
+                player.Character.Humanoid.JumpPower = val * 2
                 player.Character.Humanoid.UseJumpPower = true
             end
         elseif cmd == "chams" then
-            for _, v in pairs(game.Players:GetPlayers()) do
-                if v ~= player and v.Character then
-                    local h = Instance.new("Highlight", v.Character)
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= player and p.Character then
+                    local h = Instance.new("Highlight", p.Character)
                     h.FillColor = Color3.new(1, 0, 0)
-                    h.AlwaysOnTop = true
                 end
             end
+        elseif cmd == "unfly" then
+            setFly(0)
         end
     end
     Input.Text = ""
