@@ -1,14 +1,12 @@
 --[[
     Infinity Yield Clone v1.0
-    Система авторизации по ключу
-    GitHub Script
+    Оптимизация для мобильных устройств
     
-    ЧАСТЬ 1 из 2
+    КОД 1 из 2
 ]]
 
-local ADMIN_KEY = "adminkey" -- Ключ для доступа
+local ADMIN_KEY = "adminkey"
 
--- Создание GUI
 local ScreenGui = Instance.new("ScreenGui")
 local AuthFrame = Instance.new("Frame")
 local AuthTitle = Instance.new("TextLabel")
@@ -27,85 +25,82 @@ ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
 
--- ==================== AUTH FRAME ====================
+-- ==================== AUTH FRAME (Mobile) ====================
 AuthFrame.Name = "AuthFrame"
 AuthFrame.Parent = ScreenGui
-AuthFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+AuthFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 AuthFrame.BorderSizePixel = 0
-AuthFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-AuthFrame.Size = UDim2.new(0, 300, 0, 200)
+AuthFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
+AuthFrame.Size = UDim2.new(0, 280, 0, 180)
 AuthFrame.Active = true
 AuthFrame.Draggable = true
 
 local AuthCorner = Instance.new("UICorner")
-AuthCorner.CornerRadius = UDim.new(0, 12)
+AuthCorner.CornerRadius = UDim.new(0, 15)
 AuthCorner.Parent = AuthFrame
 
 local AuthStroke = Instance.new("UIStroke")
-AuthStroke.Color = Color3.fromRGB(0, 170, 255)
-AuthStroke.Thickness = 2
+AuthStroke.Color = Color3.fromRGB(100, 200, 255)
+AuthStroke.Thickness = 2.5
+AuthStroke.Transparency = 0
 AuthStroke.Parent = AuthFrame
 
--- Auth Shadow
-local AuthShadow = Instance.new("Frame")
-AuthShadow.Name = "Shadow"
-AuthShadow.Parent = AuthFrame
-AuthShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-AuthShadow.BackgroundTransparency = 0.6
-AuthShadow.BorderSizePixel = 0
-AuthShadow.Position = UDim2.new(0, 6, 0, 6)
-AuthShadow.Size = UDim2.new(1, 0, 1, 0)
-AuthShadow.ZIndex = 0
+-- Градиент для Auth
+local AuthGradient = Instance.new("UIGradient")
+AuthGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 40))
+}
+AuthGradient.Rotation = 45
+AuthGradient.Parent = AuthFrame
 
-local AuthShadowCorner = Instance.new("UICorner")
-AuthShadowCorner.CornerRadius = UDim.new(0, 12)
-AuthShadowCorner.Parent = AuthShadow
-
--- Auth Title
 AuthTitle.Name = "AuthTitle"
 AuthTitle.Parent = AuthFrame
 AuthTitle.BackgroundTransparency = 1
-AuthTitle.Position = UDim2.new(0, 0, 0, 20)
-AuthTitle.Size = UDim2.new(1, 0, 0, 40)
+AuthTitle.Position = UDim2.new(0, 0, 0, 15)
+AuthTitle.Size = UDim2.new(1, 0, 0, 35)
 AuthTitle.Font = Enum.Font.GothamBold
-AuthTitle.Text = "🔐 INFINITY YIELD CLONE"
-AuthTitle.TextColor3 = Color3.fromRGB(0, 170, 255)
-AuthTitle.TextSize = 18
+AuthTitle.Text = "🔐 IY CLONE"
+AuthTitle.TextColor3 = Color3.fromRGB(100, 200, 255)
+AuthTitle.TextSize = 20
 
 local AuthSubtitle = Instance.new("TextLabel")
 AuthSubtitle.Parent = AuthFrame
 AuthSubtitle.BackgroundTransparency = 1
-AuthSubtitle.Position = UDim2.new(0, 0, 0, 60)
-AuthSubtitle.Size = UDim2.new(1, 0, 0, 20)
+AuthSubtitle.Position = UDim2.new(0, 0, 0, 50)
+AuthSubtitle.Size = UDim2.new(1, 0, 0, 18)
 AuthSubtitle.Font = Enum.Font.Gotham
-AuthSubtitle.Text = "Введите ключ для доступа"
-AuthSubtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-AuthSubtitle.TextSize = 12
+AuthSubtitle.Text = "Введите ключ"
+AuthSubtitle.TextColor3 = Color3.fromRGB(180, 180, 200)
+AuthSubtitle.TextSize = 11
 
--- Key Input
 KeyInput.Name = "KeyInput"
 KeyInput.Parent = AuthFrame
-KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 KeyInput.BorderSizePixel = 0
-KeyInput.Position = UDim2.new(0, 30, 0, 95)
-KeyInput.Size = UDim2.new(0, 240, 0, 35)
+KeyInput.Position = UDim2.new(0, 20, 0, 80)
+KeyInput.Size = UDim2.new(0, 240, 0, 32)
 KeyInput.Font = Enum.Font.Gotham
-KeyInput.PlaceholderText = "Введите ключ..."
+KeyInput.PlaceholderText = "Ключ..."
 KeyInput.Text = ""
 KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyInput.TextSize = 14
+KeyInput.TextSize = 13
 KeyInput.ClearTextOnFocus = false
 
 local KeyCorner = Instance.new("UICorner")
-KeyCorner.CornerRadius = UDim.new(0, 8)
+KeyCorner.CornerRadius = UDim.new(0, 10)
 KeyCorner.Parent = KeyInput
 
--- Submit Button
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = Color3.fromRGB(60, 60, 80)
+KeyStroke.Thickness = 1.5
+KeyStroke.Parent = KeyInput
+
 SubmitButton.Name = "SubmitButton"
 SubmitButton.Parent = AuthFrame
-SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+SubmitButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
 SubmitButton.BorderSizePixel = 0
-SubmitButton.Position = UDim2.new(0, 30, 0, 145)
+SubmitButton.Position = UDim2.new(0, 20, 0, 125)
 SubmitButton.Size = UDim2.new(0, 240, 0, 35)
 SubmitButton.Font = Enum.Font.GothamBold
 SubmitButton.Text = "🚀 ВОЙТИ"
@@ -113,137 +108,132 @@ SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SubmitButton.TextSize = 14
 
 local SubmitCorner = Instance.new("UICorner")
-SubmitCorner.CornerRadius = UDim.new(0, 8)
+SubmitCorner.CornerRadius = UDim.new(0, 10)
 SubmitCorner.Parent = SubmitButton
 
--- ==================== MAIN FRAME ====================
+-- ==================== MAIN FRAME (Mobile Optimized) ====================
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.7, 0, 0.9, 0)
-MainFrame.Size = UDim2.new(0, 400, 0, 50)
+MainFrame.Position = UDim2.new(0.5, -150, 0.85, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 45)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(0, 170, 255)
+MainStroke.Color = Color3.fromRGB(100, 200, 255)
 MainStroke.Thickness = 2
 MainStroke.Parent = MainFrame
 
--- Main Shadow
-local MainShadow = Instance.new("Frame")
-MainShadow.Name = "Shadow"
-MainShadow.Parent = MainFrame
-MainShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainShadow.BackgroundTransparency = 0.5
-MainShadow.BorderSizePixel = 0
-MainShadow.Position = UDim2.new(0, 5, 0, 5)
-MainShadow.Size = UDim2.new(1, 0, 1, 0)
-MainShadow.ZIndex = 0
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 40))
+}
+MainGradient.Rotation = 90
+MainGradient.Parent = MainFrame
 
-local MainShadowCorner = Instance.new("UICorner")
-MainShadowCorner.CornerRadius = UDim.new(0, 8)
-MainShadowCorner.Parent = MainShadow
-
--- Title Label
 TitleLabel.Name = "TitleLabel"
 TitleLabel.Parent = MainFrame
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-TitleLabel.Size = UDim2.new(0, 150, 0, 20)
+TitleLabel.Size = UDim2.new(0, 100, 0, 15)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "IY Clone v1.0"
-TitleLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
-TitleLabel.TextSize = 12
+TitleLabel.Text = "IY v1.0"
+TitleLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+TitleLabel.TextSize = 10
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Command Bar
 CommandBar.Name = "CommandBar"
 CommandBar.Parent = MainFrame
 CommandBar.BackgroundTransparency = 1
-CommandBar.Position = UDim2.new(0, 10, 0, 20)
+CommandBar.Position = UDim2.new(0, 10, 0, 15)
 CommandBar.Size = UDim2.new(1, -20, 0, 25)
 CommandBar.Font = Enum.Font.Gotham
-CommandBar.PlaceholderText = "Введите команду..."
+CommandBar.PlaceholderText = "Команда..."
 CommandBar.Text = ""
 CommandBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-CommandBar.TextSize = 14
+CommandBar.TextSize = 12
 CommandBar.TextXAlignment = Enum.TextXAlignment.Left
 CommandBar.ClearTextOnFocus = false
 
--- ==================== COMMAND LIST ====================
+-- ==================== COMMAND LIST (Mobile) ====================
 CommandList.Name = "CommandList"
 CommandList.Parent = ScreenGui
-CommandList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+CommandList.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 CommandList.BorderSizePixel = 0
-CommandList.Position = UDim2.new(0.3, 0, 0.2, 0)
-CommandList.Size = UDim2.new(0, 550, 0, 450)
+CommandList.Position = UDim2.new(0.5, -160, 0.5, -200)
+CommandList.Size = UDim2.new(0, 320, 0, 400)
 CommandList.Visible = false
 CommandList.Active = true
 CommandList.Draggable = true
 
 local ListCorner = Instance.new("UICorner")
-ListCorner.CornerRadius = UDim.new(0, 10)
+ListCorner.CornerRadius = UDim.new(0, 15)
 ListCorner.Parent = CommandList
 
 local ListStroke = Instance.new("UIStroke")
-ListStroke.Color = Color3.fromRGB(0, 170, 255)
-ListStroke.Thickness = 2
+ListStroke.Color = Color3.fromRGB(100, 200, 255)
+ListStroke.Thickness = 2.5
 ListStroke.Parent = CommandList
 
--- List Title
+local ListGradient = Instance.new("UIGradient")
+ListGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35))
+}
+ListGradient.Rotation = 135
+ListGradient.Parent = CommandList
+
 ListTitle.Name = "ListTitle"
 ListTitle.Parent = CommandList
-ListTitle.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ListTitle.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
 ListTitle.BorderSizePixel = 0
-ListTitle.Size = UDim2.new(1, 0, 0, 45)
+ListTitle.Size = UDim2.new(1, 0, 0, 40)
 ListTitle.Font = Enum.Font.GothamBold
-ListTitle.Text = "📋 СПИСОК КОМАНД"
+ListTitle.Text = "📋 КОМАНДЫ"
 ListTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-ListTitle.TextSize = 18
+ListTitle.TextSize = 16
 
 local ListTitleCorner = Instance.new("UICorner")
-ListTitleCorner.CornerRadius = UDim.new(0, 10)
+ListTitleCorner.CornerRadius = UDim.new(0, 15)
 ListTitleCorner.Parent = ListTitle
 
--- Close Button
 CloseButton.Name = "CloseButton"
 CloseButton.Parent = ListTitle
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 CloseButton.BorderSizePixel = 0
-CloseButton.Position = UDim2.new(1, -40, 0, 7.5)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "✕"
 CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextSize = 18
+CloseButton.TextSize = 16
 
 local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = CloseButton
 
--- Scroll Frame
 ScrollFrame.Name = "ScrollFrame"
 ScrollFrame.Parent = CommandList
 ScrollFrame.BackgroundTransparency = 1
-ScrollFrame.Position = UDim2.new(0, 10, 0, 55)
-ScrollFrame.Size = UDim2.new(1, -20, 1, -65)
+ScrollFrame.Position = UDim2.new(0, 8, 0, 48)
+ScrollFrame.Size = UDim2.new(1, -16, 1, -56)
 ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ScrollFrame.ScrollBarThickness = 6
-ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 170, 255)
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
 
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Parent = ScrollFrame
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.Padding = UDim.new(0, 6)
 
--- ==================== ПЕРЕМЕННЫЕ ====================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -261,101 +251,107 @@ local espEnabled = false
 local espObjects = {}
 local chamsEnabled = false
 local chamsObjects = {}
+local godMode = false
 
--- ==================== КОМАНДЫ ====================
 local commands = {
-    {cmd = "fly [speed]", desc = "Включить полет (скорость от 1 до 100)", usage = "fly 50", example = "fly 75"},
-    {cmd = "unfly", desc = "Выключить полет", usage = "unfly", example = "unfly"},
-    {cmd = "jump [power]", desc = "Установить силу прыжка (от 1 до 100)", usage = "jump 50", example = "jump 80"},
-    {cmd = "espall", desc = "Включить ESP на всех игроков (бокс, линия, скелет, здоровье)", usage = "espall", example = "espall"},
-    {cmd = "unesp", desc = "Отключить ESP", usage = "unesp", example = "unesp"},
-    {cmd = "chams", desc = "Включить Chams на всех игроков", usage = "chams", example = "chams"},
-    {cmd = "unchams", desc = "Отключить Chams", usage = "unchams", example = "unchams"},
-    {cmd = "flynoclip [speed]", desc = "Включить полет с NoClip", usage = "flynoclip 50", example = "flynoclip 60"},
-    {cmd = "unflynoclip", desc = "Отключить полет с NoClip", usage = "unflynoclip", example = "unflynoclip"},
-    {cmd = "spisok", desc = "Показать/скрыть список всех команд", usage = "spisok", example = "spisok"},
+    {cmd = "fly [speed]", desc = "Полет (1-100)", example = "fly 75", icon = "✈️"},
+    {cmd = "unfly", desc = "Отключить полет", example = "unfly", icon = "❌"},
+    {cmd = "jump [power]", desc = "Сила прыжка (1-100)", example = "jump 80", icon = "🦘"},
+    {cmd = "god", desc = "Бессмертие (God Mode)", example = "god", icon = "🛡️"},
+    {cmd = "ungod", desc = "Отключить бессмертие", example = "ungod", icon = "💔"},
+    {cmd = "espall", desc = "ESP на игроков", example = "espall", icon = "👁️"},
+    {cmd = "unesp", desc = "Отключить ESP", example = "unesp", icon = "🚫"},
+    {cmd = "chams", desc = "Chams на игроков", example = "chams", icon = "🎨"},
+    {cmd = "unchams", desc = "Отключить Chams", example = "unchams", icon = "🚫"},
+    {cmd = "flynoclip [speed]", desc = "Полет + NoClip", example = "flynoclip 60", icon = "🚀"},
+    {cmd = "unflynoclip", desc = "Отключить все", example = "unflynoclip", icon = "🛑"},
+    {cmd = "spisok", desc = "Показать команды", example = "spisok", icon = "📋"},
 }
 
--- ==================== СОЗДАНИЕ СПИСКА КОМАНД ====================
 local function CreateCommandList()
     for i, cmdData in ipairs(commands) do
         local CmdFrame = Instance.new("Frame")
         CmdFrame.Name = "CmdFrame"
         CmdFrame.Parent = ScrollFrame
-        CmdFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        CmdFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
         CmdFrame.BorderSizePixel = 0
-        CmdFrame.Size = UDim2.new(1, 0, 0, 75)
+        CmdFrame.Size = UDim2.new(1, 0, 0, 60)
         
         local CmdCorner = Instance.new("UICorner")
-        CmdCorner.CornerRadius = UDim.new(0, 8)
+        CmdCorner.CornerRadius = UDim.new(0, 10)
         CmdCorner.Parent = CmdFrame
         
         local CmdStroke = Instance.new("UIStroke")
-        CmdStroke.Color = Color3.fromRGB(0, 170, 255)
+        CmdStroke.Color = Color3.fromRGB(60, 60, 80)
         CmdStroke.Thickness = 1
-        CmdStroke.Transparency = 0.8
         CmdStroke.Parent = CmdFrame
+        
+        local IconLabel = Instance.new("TextLabel")
+        IconLabel.Parent = CmdFrame
+        IconLabel.BackgroundTransparency = 1
+        IconLabel.Position = UDim2.new(0, 8, 0, 0)
+        IconLabel.Size = UDim2.new(0, 30, 1, 0)
+        IconLabel.Font = Enum.Font.GothamBold
+        IconLabel.Text = cmdData.icon
+        IconLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+        IconLabel.TextSize = 18
         
         local CmdName = Instance.new("TextLabel")
         CmdName.Parent = CmdFrame
         CmdName.BackgroundTransparency = 1
-        CmdName.Position = UDim2.new(0, 15, 0, 8)
-        CmdName.Size = UDim2.new(1, -30, 0, 20)
+        CmdName.Position = UDim2.new(0, 40, 0, 5)
+        CmdName.Size = UDim2.new(1, -45, 0, 18)
         CmdName.Font = Enum.Font.GothamBold
-        CmdName.Text = "🔹 " .. cmdData.cmd
-        CmdName.TextColor3 = Color3.fromRGB(0, 200, 255)
-        CmdName.TextSize = 15
+        CmdName.Text = cmdData.cmd
+        CmdName.TextColor3 = Color3.fromRGB(100, 200, 255)
+        CmdName.TextSize = 13
         CmdName.TextXAlignment = Enum.TextXAlignment.Left
         
         local CmdDesc = Instance.new("TextLabel")
         CmdDesc.Parent = CmdFrame
         CmdDesc.BackgroundTransparency = 1
-        CmdDesc.Position = UDim2.new(0, 15, 0, 30)
-        CmdDesc.Size = UDim2.new(1, -30, 0, 18)
+        CmdDesc.Position = UDim2.new(0, 40, 0, 23)
+        CmdDesc.Size = UDim2.new(1, -45, 0, 15)
         CmdDesc.Font = Enum.Font.Gotham
-        CmdDesc.Text = "📝 " .. cmdData.desc
-        CmdDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
-        CmdDesc.TextSize = 12
+        CmdDesc.Text = cmdData.desc
+        CmdDesc.TextColor3 = Color3.fromRGB(180, 180, 200)
+        CmdDesc.TextSize = 10
         CmdDesc.TextXAlignment = Enum.TextXAlignment.Left
         
         local CmdExample = Instance.new("TextLabel")
         CmdExample.Parent = CmdFrame
         CmdExample.BackgroundTransparency = 1
-        CmdExample.Position = UDim2.new(0, 15, 0, 50)
-        CmdExample.Size = UDim2.new(1, -30, 0, 18)
+        CmdExample.Position = UDim2.new(0, 40, 0, 38)
+        CmdExample.Size = UDim2.new(1, -45, 0, 15)
         CmdExample.Font = Enum.Font.GothamMedium
-        CmdExample.Text = "💡 Пример: " .. cmdData.example
-        CmdExample.TextColor3 = Color3.fromRGB(150, 150, 150)
-        CmdExample.TextSize = 11
+        CmdExample.Text = "💡 " .. cmdData.example
+        CmdExample.TextColor3 = Color3.fromRGB(120, 120, 140)
+        CmdExample.TextSize = 9
         CmdExample.TextXAlignment = Enum.TextXAlignment.Left
     end
     
-    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 5)
 end
 
 CreateCommandList()
 
 UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 5)
 end)
 
 --[[
-    ЧАСТЬ 2 из 2
-    Функции ESP, Chams, Fly, NoClip и обработчики команд
+    КОД 2 из 2
+    Рабочие функции
 ]]
 
--- ==================== ESP FUNCTIONS ====================
 local function CreateESP(player)
     if player == LocalPlayer then return end
-    
     local char = player.Character
     if not char then return end
-    
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChild("Humanoid")
     if not hrp or not hum then return end
     
-    -- Billboard для здоровья и имени
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ESP_Billboard"
     billboard.Parent = hrp
@@ -384,25 +380,22 @@ local function CreateESP(player)
     nameText.TextStrokeTransparency = 0
     nameText.Text = player.Name
     
-    -- Box ESP
     local boxAdornment = Instance.new("BoxHandleAdornment")
     boxAdornment.Name = "ESP_Box"
     boxAdornment.Parent = hrp
     boxAdornment.Size = char:GetExtentsSize()
-    boxAdornment.Color3 = Color3.fromRGB(0, 170, 255)
+    boxAdornment.Color3 = Color3.fromRGB(100, 200, 255)
     boxAdornment.Transparency = 0.7
     boxAdornment.AlwaysOnTop = true
     boxAdornment.ZIndex = 5
     boxAdornment.Adornee = hrp
     
-    -- Линия к игроку (Tracer)
     local line = Drawing.new("Line")
     line.Visible = true
-    line.Color = Color3.fromRGB(0, 170, 255)
+    line.Color = Color3.fromRGB(100, 200, 255)
     line.Thickness = 2
     line.Transparency = 1
     
-    -- Обновление здоровья
     local healthConnection = hum.HealthChanged:Connect(function()
         if healthText then
             healthText.Text = math.floor(hum.Health) .. " HP"
@@ -410,17 +403,14 @@ local function CreateESP(player)
         end
     end)
     
-    -- Обновление линии
     local lineConnection = RunService.RenderStepped:Connect(function()
         if not espEnabled or not hrp or not hrp.Parent then
             line:Remove()
             lineConnection:Disconnect()
             return
         end
-        
         local camera = workspace.CurrentCamera
         local vector, onScreen = camera:WorldToViewportPoint(hrp.Position)
-        
         if onScreen then
             line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
             line.To = Vector2.new(vector.X, vector.Y)
@@ -445,22 +435,18 @@ local function RemoveESP()
     espEnabled = false
 end
 
--- ==================== CHAMS FUNCTIONS ====================
 local function CreateChams(player)
     if player == LocalPlayer then return end
-    
     local char = player.Character
     if not char then return end
-    
     local highlight = Instance.new("Highlight")
     highlight.Name = "Chams_" .. player.Name
     highlight.Parent = char
-    highlight.FillColor = Color3.fromRGB(0, 170, 255)
+    highlight.FillColor = Color3.fromRGB(100, 200, 255)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.FillTransparency = 0.5
     highlight.OutlineTransparency = 0
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    
     table.insert(chamsObjects, highlight)
 end
 
@@ -472,54 +458,61 @@ local function RemoveChams()
     chamsEnabled = false
 end
 
--- ==================== FLY FUNCTIONS ====================
+-- РАБОЧИЙ FLY
 local function StartFly(speed)
     if flying then return end
     flying = true
     flySpeed = math.clamp(speed or 50, 1, 100)
     
-    local bg = Instance.new("BodyGyro")
-    bg.P = 9e4
-    bg.Parent = RootPart
-    bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.cframe = RootPart.CFrame
+    local BG = Instance.new("BodyGyro")
+    local BV = Instance.new("BodyVelocity")
     
-    local bv = Instance.new("BodyVelocity")
-    bv.velocity = Vector3.new(0, 0, 0)
-    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-    bv.Parent = RootPart
+    BG.P = 9e4
+    BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    BG.cframe = RootPart.CFrame
+    BG.Parent = RootPart
+    
+    BV.velocity = Vector3.new(0, 0, 0)
+    BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    BV.Parent = RootPart
+    
+    Humanoid.PlatformStand = true
     
     flyConnection = RunService.Heartbeat:Connect(function()
-        if not flying then return end
+        if not flying or not RootPart or not RootPart.Parent then 
+            if BG then BG:Destroy() end
+            if BV then BV:Destroy() end
+            return 
+        end
         
-        local camera = workspace.CurrentCamera
-        local moveDirection = Vector3.new()
+        local cam = workspace.CurrentCamera
+        local direction = Vector3.new()
         
         if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            moveDirection = moveDirection + camera.CFrame.LookVector
+            direction = direction + (cam.CFrame.LookVector)
         end
         if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            moveDirection = moveDirection - camera.CFrame.LookVector
+            direction = direction - (cam.CFrame.LookVector)
         end
         if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            moveDirection = moveDirection - camera.CFrame.RightVector
+            direction = direction - (cam.CFrame.RightVector)
         end
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            moveDirection = moveDirection + camera.CFrame.RightVector
+            direction = direction + (cam.CFrame.RightVector)
         end
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            moveDirection = moveDirection + Vector3.new(0, 1, 0)
+            direction = direction + Vector3.new(0, 1, 0)
         end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-            moveDirection = moveDirection - Vector3.new(0, 1, 0)
-        end
-        
-        if moveDirection.Magnitude > 0 then
-            moveDirection = moveDirection.Unit
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonR2) then
+            direction = direction - Vector3.new(0, 1, 0)
         end
         
-        bv.velocity = moveDirection * flySpeed
-        bg.cframe = camera.CFrame
+        if direction.Magnitude > 0 then
+            direction = direction.Unit
+        end
+        
+        BV.velocity = direction * flySpeed
+        BG.cframe = cam.CFrame
     end)
 end
 
@@ -536,9 +529,11 @@ local function StopFly()
             end
         end
     end
+    if Humanoid then
+        Humanoid.PlatformStand = false
+    end
 end
 
--- ==================== NOCLIP FUNCTIONS ====================
 local function StartNoClip()
     noclipConnection = RunService.Stepped:Connect(function()
         if Character then
@@ -558,23 +553,51 @@ local function StopNoClip()
     end
     if Character then
         for _, part in ipairs(Character:GetDescendants()) do
-            if part:IsA("BasePart") then
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                 part.CanCollide = true
             end
         end
     end
 end
 
--- ==================== NOTIFICATION ====================
-local function Notify(text, color)
-    TitleLabel.Text = text
-    TitleLabel.TextColor3 = color or Color3.fromRGB(0, 255, 0)
-    wait(2)
-    TitleLabel.Text = "IY Clone v1.0"
-    TitleLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
+-- GOD MODE (Бессмертие)
+local godConnection
+local function EnableGodMode()
+    if godMode then return end
+    godMode = true
+    
+    if Humanoid then
+        Humanoid.MaxHealth = math.huge
+        Humanoid.Health = math.huge
+        
+        godConnection = Humanoid.HealthChanged:Connect(function(health)
+            if godMode and health < math.huge then
+                Humanoid.Health = math.huge
+            end
+        end)
+    end
 end
 
--- ==================== COMMAND HANDLER ====================
+local function DisableGodMode()
+    godMode = false
+    if godConnection then
+        godConnection:Disconnect()
+        godConnection = nil
+    end
+    if Humanoid then
+        Humanoid.MaxHealth = 100
+        Humanoid.Health = 100
+    end
+end
+
+local function Notify(text, color)
+    TitleLabel.Text = text
+    TitleLabel.TextColor3 = color or Color3.fromRGB(100, 255, 100)
+    task.wait(2)
+    TitleLabel.Text = "IY v1.0"
+    TitleLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+end
+
 local function ExecuteCommand(cmd)
     local args = cmd:lower():split(" ")
     local command = args[1]
@@ -583,21 +606,32 @@ local function ExecuteCommand(cmd)
         local speed = tonumber(args[2]) or 50
         speed = math.clamp(speed, 1, 100)
         StartFly(speed)
-        Notify("✈️ Fly ON (Speed: " .. speed .. ")", Color3.fromRGB(0, 255, 100))
+        Notify("✈️ Fly ON (" .. speed .. ")", Color3.fromRGB(100, 255, 100))
         
     elseif command == "unfly" then
         StopFly()
-        Notify("✈️ Fly OFF", Color3.fromRGB(255, 100, 50))
+        Notify("✈️ Fly OFF", Color3.fromRGB(255, 150, 100))
         
     elseif command == "jump" then
         local power = tonumber(args[2]) or 50
         power = math.clamp(power, 1, 100)
-        Humanoid.JumpPower = power
-        Notify("🦘 Jump Power: " .. power, Color3.fromRGB(0, 255, 100))
+        if Humanoid then
+            Humanoid.JumpPower = power
+            Humanoid.UseJumpPower = true
+        end
+        Notify("🦘 Jump: " .. power, Color3.fromRGB(100, 255, 100))
+        
+    elseif command == "god" then
+        EnableGodMode()
+        Notify("🛡️ God Mode ON", Color3.fromRGB(255, 215, 0))
+        
+    elseif command == "ungod" then
+        DisableGodMode()
+        Notify("💔 God Mode OFF", Color3.fromRGB(255, 150, 100))
         
     elseif command == "espall" then
         if espEnabled then
-            Notify("⚠️ ESP уже включен!", Color3.fromRGB(255, 200, 0))
+            Notify("⚠️ ESP уже ON", Color3.fromRGB(255, 200, 100))
             return
         end
         espEnabled = true
@@ -606,23 +640,15 @@ local function ExecuteCommand(cmd)
                 CreateESP(player)
             end
         end
-        Players.PlayerAdded:Connect(function(player)
-            player.CharacterAdded:Connect(function()
-                if espEnabled then
-                    wait(0.5)
-                    CreateESP(player)
-                end
-            end)
-        end)
-        Notify("👁️ ESP ON", Color3.fromRGB(0, 255, 100))
+        Notify("👁️ ESP ON", Color3.fromRGB(100, 255, 100))
         
     elseif command == "unesp" then
         RemoveESP()
-        Notify("👁️ ESP OFF", Color3.fromRGB(255, 100, 50))
+        Notify("👁️ ESP OFF", Color3.fromRGB(255, 150, 100))
         
     elseif command == "chams" then
         if chamsEnabled then
-            Notify("⚠️ Chams уже включен!", Color3.fromRGB(255, 200, 0))
+            Notify("⚠️ Chams уже ON", Color3.fromRGB(255, 200, 100))
             return
         end
         chamsEnabled = true
@@ -631,141 +657,96 @@ local function ExecuteCommand(cmd)
                 CreateChams(player)
             end
         end
-        Players.PlayerAdded:Connect(function(player)
-            player.CharacterAdded:Connect(function()
-                if chamsEnabled then
-                    wait(0.5)
-                    CreateChams(player)
-                end
-            end)
-        end)
-        Notify("🎨 Chams ON", Color3.fromRGB(0, 255, 100))
+        Notify("🎨 Chams ON", Color3.fromRGB(100, 255, 100))
         
     elseif command == "unchams" then
         RemoveChams()
-        Notify("🎨 Chams OFF", Color3.fromRGB(255, 100, 50))
+        Notify("🎨 Chams OFF", Color3.fromRGB(255, 150, 100))
         
     elseif command == "flynoclip" then
         local speed = tonumber(args[2]) or 50
         speed = math.clamp(speed, 1, 100)
         StartFly(speed)
         StartNoClip()
-        Notify("✈️ Fly+NoClip ON (Speed: " .. speed .. ")", Color3.fromRGB(0, 255, 100))
+        Notify("🚀 Fly+NoClip ON", Color3.fromRGB(100, 255, 100))
         
     elseif command == "unflynoclip" then
         StopFly()
         StopNoClip()
-        Notify("✈️ Fly+NoClip OFF", Color3.fromRGB(255, 100, 50))
+        Notify("🛑 Выключено", Color3.fromRGB(255, 150, 100))
         
     elseif command == "spisok" then
         CommandList.Visible = not CommandList.Visible
         
     else
-        Notify("❌ Неизвестная команда!", Color3.fromRGB(255, 50, 50))
+        Notify("❌ Неизвестная команда", Color3.fromRGB(255, 100, 100))
     end
-end
-
--- ==================== AUTHORIZATION ====================
-local function Authenticate()
-    AuthFrame:TweenPosition(UDim2.new(0.5, -150, 0.5, -100), "Out", "Quint", 0.5, true)
 end
 
 local function CheckKey()
     local inputKey = KeyInput.Text
-    
     if inputKey == ADMIN_KEY then
         isAuthenticated = true
-        
-        -- Анимация успеха
-        AuthStroke.Color = Color3.fromRGB(0, 255, 100)
-        AuthTitle.Text = "✅ ДОСТУП РАЗРЕШЕН"
-        AuthTitle.TextColor3 = Color3.fromRGB(0, 255, 100)
+        AuthStroke.Color = Color3.fromRGB(100, 255, 100)
+        AuthTitle.Text = "✅ ДОСТУП OK"
+        AuthTitle.TextColor3 = Color3.fromRGB(100, 255, 100)
         AuthSubtitle.Text = "Загрузка..."
-        SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-        
-        wait(1)
-        
-        AuthFrame:TweenPosition(UDim2.new(0.5, -150, -0.5, 0), "In", "Quint", 0.5, true)
-        wait(0.5)
+        SubmitButton.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+        task.wait(1)
+        AuthFrame:TweenPosition(UDim2.new(0.5, -140, -0.3, 0), "In", "Quint", 0.5, true)
+        task.wait(0.5)
         AuthFrame.Visible = false
-        
         MainFrame.Visible = true
-        MainFrame:TweenPosition(UDim2.new(0.7, 0, 0.85, 0), "Out", "Quint", 0.5, true)
-        
-        Notify("✅ IY Clone загружен!", Color3.fromRGB(0, 255, 100))
-        
-        print("🚀 ========================")
-        print("✅ Infinity Yield Clone v1.0")
-        print("🔑 Авторизация успешна!")
-        print("📋 Команда 'spisok' - список команд")
-        print("🚀 ========================")
-        
+        MainFrame:TweenPosition(UDim2.new(0.5, -150, 0.9, 0), "Out", "Quint", 0.5, true)
+        Notify("✅ Загружено!", Color3.fromRGB(100, 255, 100))
+        print("🚀 IY Clone v1.0 | Авторизация OK")
     else
-        -- Анимация ошибки
-        AuthStroke.Color = Color3.fromRGB(255, 50, 50)
+        AuthStroke.Color = Color3.fromRGB(255, 100, 100)
         AuthTitle.Text = "❌ НЕВЕРНЫЙ КЛЮЧ"
-        AuthTitle.TextColor3 = Color3.fromRGB(255, 50, 50)
+        AuthTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
         AuthSubtitle.Text = "Попробуйте снова"
-        SubmitButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        SubmitButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
         KeyInput.Text = ""
-        
-        wait(1.5)
-        
-        AuthStroke.Color = Color3.fromRGB(0, 170, 255)
-        AuthTitle.Text = "🔐 INFINITY YIELD CLONE"
-        AuthTitle.TextColor3 = Color3.fromRGB(0, 170, 255)
-        AuthSubtitle.Text = "Введите ключ для доступа"
-        SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        task.wait(1.5)
+        AuthStroke.Color = Color3.fromRGB(100, 200, 255)
+        AuthTitle.Text = "🔐 IY CLONE"
+        AuthTitle.TextColor3 = Color3.fromRGB(100, 200, 255)
+        AuthSubtitle.Text = "Введите ключ"
+        SubmitButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
     end
 end
 
--- ==================== EVENT HANDLERS ====================
 SubmitButton.MouseButton1Click:Connect(CheckKey)
-
 KeyInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        CheckKey()
-    end
+    if enterPressed then CheckKey() end
 end)
-
 CommandBar.FocusLost:Connect(function(enterPressed)
     if enterPressed and CommandBar.Text ~= "" then
         ExecuteCommand(CommandBar.Text)
         CommandBar.Text = ""
     end
 end)
-
 CloseButton.MouseButton1Click:Connect(function()
     CommandList.Visible = false
 end)
 
--- Hover эффекты
-SubmitButton.MouseEnter:Connect(function()
-    SubmitButton:TweenSize(UDim2.new(0, 245, 0, 37), "Out", "Quad", 0.2, true)
-end)
-
-SubmitButton.MouseLeave:Connect(function()
-    SubmitButton:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.2, true)
-end)
-
-CloseButton.MouseEnter:Connect(function()
-    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-end)
-
-CloseButton.MouseLeave:Connect(function()
-    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-end)
-
--- Character Reset Handler
 LocalPlayer.CharacterAdded:Connect(function(char)
     Character = char
     Humanoid = char:WaitForChild("Humanoid")
     RootPart = char:WaitForChild("HumanoidRootPart")
-    
     flying = false
+    godMode = false
     if flyConnection then flyConnection:Disconnect() end
     if noclipConnection then noclipConnection:Disconnect() end
+    if godConnection then godConnection:Disconnect() end
 end)
 
--- Запуск авторизации
-Authenticate()
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        if espEnabled then CreateESP(player) end
+        if chamsEnabled then CreateChams(player) end
+    end)
+end)
+
+AuthFrame:TweenPosition(UDim2.new(0.5, -140, 0.5, -90), "Out", "Quint", 0.5, true)
