@@ -1,80 +1,64 @@
 local ADM_KEY = "adminkey"
 local player = game.Players.LocalPlayer
 local camera = workspace.CurrentCamera
-local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
--- СОЗДАНИЕ ИНТЕРФЕЙСА (ГОТХАМ И НЕОН)
+-- СОЗДАНИЕ ИНТЕРФЕЙСА В СТИЛЕ INFINITE YIELD
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 280, 0, 140)
-Main.Position = UDim2.new(0.5, -140, -0.3, 0) -- Начальная позиция выше экрана
-Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-Main.BorderSizePixel = 0
-Main.Active = true
-Main.Draggable = true 
+local Holder = Instance.new("Frame", ScreenGui)
+Holder.Name = "IY_Mobile_Clone"
+Holder.Size = UDim2.new(0, 300, 0, 35)
+Holder.Position = UDim2.new(0.5, -150, 0.05, 0)
+Holder.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
+Holder.BorderSizePixel = 0
+Holder.Active = true
+Holder.Draggable = true
 
-local Corner = Instance.new("UICorner", Main)
-Corner.CornerRadius = ToolPunchItem.new(0, 10)
+local TopBar = Instance.new("Frame", Holder)
+TopBar.Size = UDim2.new(1, 0, 0, 2)
+TopBar.BackgroundColor3 = Color3.fromRGB(0, 255, 150) -- Неоновая полоска сверху
+TopBar.BorderSizePixel = 0
 
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 35)
+local Title = Instance.new("TextLabel", Holder)
+Title.Size = UDim2.new(1, -10, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Text = "ВВЕДИТЕ КЛЮЧ"
-Title.TextColor3 = Color3.fromRGB(0, 255, 150) -- Неоново-зеленый
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 16
-Instance.new("UICorner", Title)
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
-local Input = Instance.new("TextBox", Main)
-Input.Size = UDim2.new(0.9, 0, 0, 45)
-Input.Position = UDim2.new(0.05, 0, 0.45, 0)
-Input.PlaceholderText = "Твой ключ или команда..."
+local Input = Instance.new("TextBox", Holder)
+Input.Size = UDim2.new(1, 0, 0, 30)
+Input.Position = UDim2.new(0, 0, 1, 2)
+Input.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+Input.BorderSizePixel = 0
+Input.PlaceholderText = "Напиши ключ..."
 Input.Text = ""
-Input.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 Input.TextColor3 = Color3.new(1, 1, 1)
-Input.Font = Enum.Font.Gotham
-Input.TextSize = 14
-Instance.new("UICorner", Input)
+Input.Font = Enum.Font.SourceSans
+Input.TextSize = 17
 
--- Панель списка команд (по умолчанию скрыта)
-local ListFrame = Instance.new("Frame", Main)
-ListFrame.Size = UDim2.new(1, 0, 0, 120)
-ListFrame.Position = UDim2.new(0, 0, 1, 10)
-ListFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-ListFrame.Visible = false
-Instance.new("UICorner", ListFrame)
+-- ПЕРЕМЕННЫЕ
+local flying, noclip, godmode = false, false, false
+local flyBV = nil
+local noclipEvent = nil
 
-local ListText = Instance.new("TextLabel", ListFrame)
-ListText.Size = UDim2.new(0.9, 0, 0.9, 0)
-ListText.Position = UDim2.new(0.05, 0, 0.05, 0)
-ListText.Text = [[
-Список команд:
-fly [1-100], unfly
-jp [1-100]
-chams
-god, ungod
-flynoclip, unflynoclip
-/spisok (скрыть)
-]]
-ListText.TextColor3 = Color3.new(1, 1, 1)
-ListText.BackgroundTransparency = 1
-ListText.Font = Enum.Font.Gotham
-ListText.TextSize = 12
-ListText.TextXAlignment = Enum.TextXAlignment.Left
+-- ФУНКЦИИ
+local function notify(txt, color)
+    Title.Text = txt
+    Title.TextColor3 = color or Color3.new(1,1,1)
+end
 
--- АНИМАЦИЯ ПОЯВЛЕНИЯ
-Main:TweenPosition(UDim2.new(0.5, -140, 0.1, 0), "Out", "Back", 1)
-
--- ФУНКЦИОНАЛ
-local flying, flyBV, noclipLoop, godPart = false, nil, nil, nil
-
-local function toggleFly(speed, noclip)
+local function setFly(speed, isNoclip)
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     
     if flyBV then flyBV:Destroy() end
-    if noclipLoop then noclipLoop:Disconnect() end
+    if noclipEvent then noclipEvent:Disconnect() end
     
     if speed > 0 then
         flying = true
@@ -83,90 +67,83 @@ local function toggleFly(speed, noclip)
         
         task.spawn(function()
             while flying and char:FindFirstChild("HumanoidRootPart") do
-                flyBV.Velocity = camera.CFrame.LookVector * (speed * 2.5)
+                flyBV.Velocity = camera.CFrame.LookVector * (speed * 3)
                 task.wait()
             end
         end)
         
-        if noclip then
-            noclipLoop = RunService.Stepped:Connect(function()
-                if char then
-                    for _, part in pairs(char:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
+        if isNoclip then
+            noclipEvent = RunService.Stepped:Connect(function()
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
                 end
             end)
         end
     else
         flying = false
-        if char:FindFirstChild("Humanoid") then
-            for _, part in pairs(char:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then part.CanCollide = true end
         end
     end
 end
 
-Input.FocusLost:Connect(function(enterPressed)
-    if not enterPressed then return end
-    
+-- ОБРАБОТКА ВВОДА
+Input.FocusLost:Connect(function(enter)
+    if not enter then return end
     local text = Input.Text:lower()
     local args = string.split(text, " ")
     local cmd = args[1]
     local val = tonumber(args[2])
 
-    if Title.Text == "ВВЕДИТЕ КЛЮЧ" then
+    if Title.Text == "ВВЕДИТЕ КЛЮЧ" or Title.Text == "КЛЮЧ НЕ ВЕРНО" then
         if text == ADM_KEY then
-            Title.Text = "ВВЕДИТЕ КОМАНДУ"
-            Title.TextColor3 = Color3.new(1, 1, 1)
-            Input.PlaceholderText = "/spisok - для справки"
+            notify("ВВЕДИТЕ КОМАНДУ", Color3.fromRGB(0, 255, 150))
+            Input.PlaceholderText = "Пример: fly 29"
         else
-            Title.Text = "КЛЮЧ НЕ ВЕРНО"
-            Title.TextColor3 = Color3.new(1, 0, 0) -- Красный
-            task.wait(1.5)
-            Title.Text = "ВВЕДИТЕ КЛЮЧ"
-            Title.TextColor3 = Color3.fromRGB(0, 255, 150)
+            notify("КЛЮЧ НЕ ВЕРНО", Color3.new(1, 0, 0))
+            -- Эффект тряски при ошибке
+            local origPos = Holder.Position
+            for i = 1, 5 do
+                Holder.Position = origPos + UDim2.new(0, math.random(-5, 5), 0, 0)
+                task.wait(0.05)
+            end
+            Holder.Position = origPos
         end
     else
-        -- ОБРАБОТКА КОМАНД
+        -- КОМАНДЫ
         if cmd == "fly" then
-            toggleFly(val or 0, false)
-        elseif cmd == "unfly" then
-            toggleFly(0, false)
+            setFly(val or 50, false)
+        elseif cmd == "flynoclip" then
+            setFly(val or 50, true)
+        elseif cmd == "unfly" or cmd == "unflynoclip" then
+            setFly(0, false)
         elseif cmd == "jp" or cmd == "jump" then
             if val and player.Character:FindFirstChild("Humanoid") then
                 player.Character.Humanoid.JumpPower = val * 2
                 player.Character.Humanoid.UseJumpPower = true
             end
+        elseif cmd == "god" then
+            player.Character.Humanoid.MaxHealth = math.huge
+            player.Character.Humanoid.Health = math.huge
+            notify("БЕССМЕРТИЕ ВКЛ", Color3.new(1,1,0))
+        elseif cmd == "ungod" then
+            player.Character.Humanoid.MaxHealth = 100
+            player.Character.Humanoid.Health = 100
+            notify("БЕССМЕРТИЕ ВЫКЛ", Color3.new(1,1,1))
         elseif cmd == "chams" then
-            for _, v in pairs(game.Players:GetPlayers()) do
-                if v ~= player and v.Character then
-                    local h = Instance.new("Highlight", v.Character)
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= player and p.Character then
+                    local h = Instance.new("Highlight", p.Character)
                     h.FillColor = Color3.new(1, 0, 0)
-                    h.AlwaysOnTop = true
                 end
             end
-        elseif cmd == "god" then
-            if player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.MaxHealth = 1e9 -- Почти бесконечное здоровье
-                player.Character.Humanoid.Health = 1e9
-            end
-        elseif cmd == "ungod" then
-            if player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.MaxHealth = 100
-                player.Character.Humanoid.Health = 100
-            end
-        elseif cmd == "flynoclip" then
-            toggleFly(val or 0, true)
-        elseif cmd == "unflynoclip" then
-            toggleFly(0, false)
         elseif cmd == "/spisok" then
-            ListFrame.Visible = not ListFrame.Visible
+            notify("fly, flynoclip, jp, god, chams", Color3.new(1,1,1))
         end
     end
     Input.Text = ""
 end)
+
+-- Плавное появление
+Holder.Position = UDim2.new(0.5, -150, -0.1, 0)
+TweenService:Create(Holder, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 0.05, 0)}):Play()
