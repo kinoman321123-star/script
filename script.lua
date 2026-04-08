@@ -2373,3 +2373,469 @@ end)
 print("[IY] Sheriff ESP (MM2) loaded")
 print("[IY] Murder ESP (MM2) loaded")
 print("[IY] All systems operational! ✅")
+
+-- Часть 7: Silent Aim System (Mobile Support + Hitbox Visualization)
+local SilentAim = {
+    Enabled = false,
+    HitboxSize = 10,
+    FOV = 100,
+    VisibleCheck = true,
+    TeamCheck = true,
+    TargetPart = "Head",
+    ShowHitbox = false,
+    HitboxColor = Color3.fromRGB(255, 0, 0),
+    HitboxTransparency = 0.5
+}
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local UIS = game:GetService("UserInputService")
+
+-- Хранилище для визуализации хитбоксов
+local HitboxParts = {}
+
+-- Функция создания визуального хитбокса
+local function CreateHitboxVisual(character)
+    if not SilentAim.ShowHitbox then return end
+    
+    local targetPart = character:FindFirstChild(SilentAim.TargetPart)
+    if not targetPart then return end
+    
+    if HitboxParts[character] then
+        HitboxParts[character]:Destroy()
+    end
+    
+    local hitbox = Instance.new("Part")
+    hitbox.Name = "SilentAimHitbox"
+    hitbox.Size = Vector3.new(SilentAim.HitboxSize, SilentAim.HitboxSize, SilentAim.HitboxSize)
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Material = Enum.Material.ForceField
+    hitbox.Color = SilentAim.HitboxColor
+    hitbox.Transparency = SilentAim.HitboxTransparency
+    hitbox.Parent = workspace
+    
+    local outline = Instance.new("SelectionBox")
+    outline.LineThickness = 0.05
+    outline.Color3 = SilentAim.HitboxColor
+    outline.Adornee = hitbox
+    outline.Parent = hitbox
+    
+    HitboxParts[character] = hitbox
+    
+    RunService.RenderStepped:Connect(function()
+        if hitbox and hitbox.Parent and targetPart and targetPart.Parent then
+            hitbox.CFrame = targetPart.CFrame
+            hitbox.Size = Vector3.new(SilentAim.HitboxSize, SilentAim.HitboxSize, SilentAim.HitboxSize)
+            hitbox.Color = SilentAim.HitboxColor
+            hitbox.Transparency = SilentAim.HitboxTransparency
+            outline.Color3 = SilentAim.HitboxColor
+        else
+            if HitboxParts[character] then
+                HitboxParts[character]:Destroy()
+                HitboxParts[character] = nil
+            end
+        end
+    end)
+end
+
+local function UpdateAllHitboxes()
+    for _, hitbox in pairs(HitboxParts) do
+        if hitbox then
+            hitbox:Destroy()
+        end
+    end
+    HitboxParts = {}
+    
+    if SilentAim.ShowHitbox then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                CreateHitboxVisual(player.Character)
+            end
+        end
+    end
+end
+
+local function CreateSilentMenu()
+    local ScreenGui = Instance.new("ScreenGui")
+    local Frame = Instance.new("ScrollingFrame")
+    local Title = Instance.new("TextLabel")
+    
+    ScreenGui.Name = "SilentAimMenu"
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
+    
+    local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+    local frameWidth = isMobile and 360 or 320
+    local frameHeight = isMobile and 620 or 570
+    
+    Frame.Parent = ScreenGui
+    Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Frame.BorderSizePixel = 0
+    Frame.Position = UDim2.new(0.5, -frameWidth/2, 0.5, -frameHeight/2)
+    Frame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
+    Frame.Active = true
+    Frame.Draggable = true
+    Frame.ScrollBarThickness = 8
+    Frame.CanvasSize = UDim2.new(0, 0, 0, 850)
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 12)
+    Corner.Parent = Frame
+    
+    Title.Name = "Title"
+    Title.Parent = Frame
+    Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Title.BorderSizePixel = 0
+    Title.Size = UDim2.new(1, 0, 0, 55)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "🎯 Silent Aim Settings"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = isMobile and 22 or 20
+    
+    local TitleCorner = Instance.new("UICorner")
+    TitleCorner.CornerRadius = UDim.new(0, 12)
+    TitleCorner.Parent = Title
+    
+    local yOffset = 75
+    local spacing = isMobile and 95 : 85
+    
+    local function CreateButton(name, text, yPos, callback)
+        local button = Instance.new("TextButton")
+        button.Name = name
+        button.Parent = Frame
+        button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        button.Position = UDim2.new(0.08, 0, 0, yPos)
+        button.Size = UDim2.new(0.84, 0, 0, isMobile and 48 : 42)
+        button.Font = Enum.Font.GothamBold
+        button.Text = text
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.TextSize = isMobile and 17 : 15
+        button.AutoButtonColor = false
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = button
+        
+        button.MouseButton1Click:Connect(callback)
+        
+        button.MouseButton1Down:Connect(function()
+            button.BackgroundColor3 = Color3.fromRGB(button.BackgroundColor3.R * 0.8, button.BackgroundColor3.G * 0.8, button.BackgroundColor3.B * 0.8)
+        end)
+        
+        button.MouseButton1Up:Connect(function()
+            task.wait(0.1)
+        end)
+        
+        return button
+    end
+    
+    local function CreateSlider(labelText, yPos, minVal, maxVal, defaultVal, callback)
+        local label = Instance.new("TextLabel")
+        label.Parent = Frame
+        label.BackgroundTransparency = 1
+        label.Position = UDim2.new(0.08, 0, 0, yPos)
+        label.Size = UDim2.new(0.84, 0, 0, 28)
+        label.Font = Enum.Font.GothamBold
+        label.Text = labelText .. ": " .. defaultVal
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.TextSize = isMobile and 17 : 15
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local sliderBG = Instance.new("Frame")
+        sliderBG.Parent = Frame
+        sliderBG.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        sliderBG.Position = UDim2.new(0.08, 0, 0, yPos + 33)
+        sliderBG.Size = UDim2.new(0.84, 0, 0, isMobile and 14 : 12)
+        
+        local sliderCorner = Instance.new("UICorner")
+        sliderCorner.CornerRadius = UDim.new(1, 0)
+        sliderCorner.Parent = sliderBG
+        
+        local sliderFill = Instance.new("Frame")
+        sliderFill.Parent = sliderBG
+        sliderFill.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+        sliderFill.BorderSizePixel = 0
+        sliderFill.Size = UDim2.new((defaultVal - minVal) / (maxVal - minVal), 0, 1, 0)
+        
+        local fillCorner = Instance.new("UICorner")
+        fillCorner.CornerRadius = UDim.new(1, 0)
+        fillCorner.Parent = sliderFill
+        
+        local dragging = false
+        
+        local function updateSlider(input)
+            local mousePos = input.Position.X
+            local sliderPos = sliderBG.AbsolutePosition.X
+            local sliderSize = sliderBG.AbsoluteSize.X
+            local percentage = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
+            sliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+            local value = math.floor(minVal + (percentage * (maxVal - minVal)))
+            label.Text = labelText .. ": " .. value
+            callback(value)
+        end
+        
+        sliderBG.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                updateSlider(input)
+            end
+        end)
+        
+        UIS.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
+            end
+        end)
+        
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+        
+        return label
+    end
+    
+    -- Toggle Enable
+    local EnableToggle = CreateButton("EnableToggle", "🔴 Enable: OFF", yOffset, function()
+        SilentAim.Enabled = not SilentAim.Enabled
+        EnableToggle.BackgroundColor3 = SilentAim.Enabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        EnableToggle.Text = (SilentAim.Enabled and "🟢" or "🔴") .. " Enable: " .. (SilentAim.Enabled and "ON" or "OFF")
+    end)
+    yOffset = yOffset + spacing
+    
+    -- Hitbox Size Slider
+    CreateSlider("Hitbox Size", yOffset, 1, 50, SilentAim.HitboxSize, function(value)
+        SilentAim.HitboxSize = value
+        UpdateAllHitboxes()
+    end)
+    yOffset = yOffset + spacing
+    
+    -- FOV Slider
+    CreateSlider("FOV", yOffset, 10, 300, SilentAim.FOV, function(value)
+        SilentAim.FOV = value
+    end)
+    yOffset = yOffset + spacing
+    
+    -- Target Part
+    local TargetLabel = Instance.new("TextLabel")
+    TargetLabel.Parent = Frame
+    TargetLabel.BackgroundTransparency = 1
+    TargetLabel.Position = UDim2.new(0.08, 0, 0, yOffset)
+    TargetLabel.Size = UDim2.new(0.84, 0, 0, 28)
+    TargetLabel.Font = Enum.Font.GothamBold
+    TargetLabel.Text = "🎯 Target Part:"
+    TargetLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TargetLabel.TextSize = isMobile and 17 : 15
+    TargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local parts = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"}
+    local currentIndex = 1
+    
+    local TargetButton = CreateButton("TargetButton", "Head", yOffset + 33, function()
+        currentIndex = currentIndex % #parts + 1
+        SilentAim.TargetPart = parts[currentIndex]
+        TargetButton.Text = parts[currentIndex]
+        TargetButton.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+        UpdateAllHitboxes()
+    end)
+    TargetButton.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+    yOffset = yOffset + spacing
+    
+    -- Show Hitbox Toggle
+    local ShowHitboxToggle = CreateButton("ShowHitbox", "👁️ Show Hitbox: OFF", yOffset, function()
+        SilentAim.ShowHitbox = not SilentAim.ShowHitbox
+        ShowHitboxToggle.BackgroundColor3 = SilentAim.ShowHitbox and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        ShowHitboxToggle.Text = "👁️ Show Hitbox: " .. (SilentAim.ShowHitbox and "ON" or "OFF")
+        UpdateAllHitboxes()
+    end)
+    yOffset = yOffset + spacing
+    
+    -- Hitbox Color
+    local ColorLabel = Instance.new("TextLabel")
+    ColorLabel.Parent = Frame
+    ColorLabel.BackgroundTransparency = 1
+    ColorLabel.Position = UDim2.new(0.08, 0, 0, yOffset)
+    ColorLabel.Size = UDim2.new(0.84, 0, 0, 28)
+    ColorLabel.Font = Enum.Font.GothamBold
+    ColorLabel.Text = "🎨 Hitbox Color:"
+    ColorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorLabel.TextSize = isMobile and 17 : 15
+    ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    yOffset = yOffset + 33
+    
+    local colors = {
+        {name = "Red", color = Color3.fromRGB(255, 0, 0)},
+        {name = "Green", color = Color3.fromRGB(0, 255, 0)},
+        {name = "Blue", color = Color3.fromRGB(0, 150, 255)},
+        {name = "Yellow", color = Color3.fromRGB(255, 255, 0)},
+        {name = "Purple", color = Color3.fromRGB(200, 0, 255)},
+        {name = "Cyan", color = Color3.fromRGB(0, 255, 255)},
+        {name = "White", color = Color3.fromRGB(255, 255, 255)},
+        {name = "Orange", color = Color3.fromRGB(255, 140, 0)}
+    }
+    
+    local colorButtonSize = (frameWidth * 0.84 - 24) / 4
+    local selectedStroke = nil
+    
+    for i, colorData in ipairs(colors) do
+        local row = math.floor((i - 1) / 4)
+        local col = (i - 1) % 4
+        
+        local colorButton = Instance.new("TextButton")
+        colorButton.Parent = Frame
+        colorButton.BackgroundColor3 = colorData.color
+        colorButton.Position = UDim2.new(0.08 + (col * 0.21), 0, 0, yOffset + (row * (isMobile and 52 : 47)))
+        colorButton.Size = UDim2.new(0, colorButtonSize, 0, isMobile and 42 : 37)
+        colorButton.Text = ""
+        colorButton.AutoButtonColor = false
+        
+        local colorCorner = Instance.new("UICorner")
+        colorCorner.CornerRadius = UDim.new(0, 10)
+        colorCorner.Parent = colorButton
+        
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 0
+        stroke.Color = Color3.fromRGB(255, 255, 255)
+        stroke.Parent = colorButton
+        
+        if colorData.name == "Red" then
+            stroke.Thickness = 4
+            selectedStroke = stroke
+        end
+        
+        colorButton.MouseButton1Click:Connect(function()
+            SilentAim.HitboxColor = colorData.color
+            UpdateAllHitboxes()
+            
+            if selectedStroke then
+                selectedStroke.Thickness = 0
+            end
+            stroke.Thickness = 4
+            selectedStroke = stroke
+        end)
+    end
+    yOffset = yOffset + (isMobile and 115 : 105)
+    
+    -- Transparency Slider
+    CreateSlider("Transparency", yOffset, 0, 100, SilentAim.HitboxTransparency * 100, function(value)
+        SilentAim.HitboxTransparency = value / 100
+        UpdateAllHitboxes()
+    end)
+    yOffset = yOffset + spacing
+    
+    -- Team Check
+    local TeamCheck = CreateButton("TeamCheck", "👥 Team Check: ON", yOffset, function()
+        SilentAim.TeamCheck = not SilentAim.TeamCheck
+        TeamCheck.BackgroundColor3 = SilentAim.TeamCheck and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        TeamCheck.Text = "👥 Team Check: " .. (SilentAim.TeamCheck and "ON" or "OFF")
+    end)
+    TeamCheck.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    yOffset = yOffset + spacing
+    
+    -- Close Button
+    local CloseButton = CreateButton("CloseButton", "❌ Close Menu", yOffset, function()
+        ScreenGui:Destroy()
+        for _, hitbox in pairs(HitboxParts) do
+            if hitbox then
+                hitbox:Destroy()
+            end
+        end
+        HitboxParts = {}
+    end)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+end
+
+local function GetClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = SilentAim.FOV
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if SilentAim.TeamCheck and player.Team == LocalPlayer.Team then
+                continue
+            end
+            
+            local character = player.Character
+            if character and character:FindFirstChild(SilentAim.TargetPart) and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+                local part = character[SilentAim.TargetPart]
+                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                
+                if onScreen then
+                    local mousePos = UIS:GetMouseLocation()
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    
+                    if distance < shortestDistance then
+                        closestPlayer = player
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+-- Hook для Silent Aim
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if SilentAim.Enabled and (method == "FireServer" or method == "InvokeServer") then
+        local closestPlayer = GetClosestPlayer()
+        if closestPlayer and closestPlayer.Character then
+            local targetPart = closestPlayer.Character:FindFirstChild(SilentAim.TargetPart)
+            if targetPart then
+                for i, v in pairs(args) do
+                    if typeof(v) == "Vector3" then
+                        args[i] = targetPart.Position
+                    elseif typeof(v) == "CFrame" then
+                        args[i] = targetPart.CFrame
+                    elseif typeof(v) == "Instance" and v:IsA("BasePart") then
+                        args[i] = targetPart
+                    end
+                end
+            end
+        end
+    end
+    
+    return oldNamecall(unpack(args))
+end)
+
+setreadonly(mt, true)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
+        if SilentAim.ShowHitbox then
+            CreateHitboxVisual(character)
+        end
+    end)
+end)
+
+-- ИНТЕГРАЦИЯ С ТВОЕЙ СИСТЕМОЙ КОМАНД
+commands["silent"] = {
+    description = "Открыть меню Silent Aim",
+    usage = ";silent",
+    execute = function(args)
+        if game.CoreGui:FindFirstChild("SilentAimMenu") then
+            game.CoreGui:FindFirstChild("SilentAimMenu"):Destroy()
+            notify("Silent Aim меню закрыто", 2)
+        else
+            CreateSilentMenu()
+            notify("Silent Aim меню открыто", 2)
+        end
+    end
+}
+
+print("✅ Часть 7/7 - Silent Aim загружен!")
+print("📱 Используй команду: ;silent")
