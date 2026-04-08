@@ -1528,3 +1528,848 @@ print("[IY] CFG System loaded")
 print("[IY] Spider mode loaded")
 print("[IY] TPGun (MM2) loaded")
 print("[IY] Commands: cfg create [name], cfg [name], spider, unspider, tpgun")
+
+--[[
+    КОД 5 из 6
+    UnCFG + AutoTPGun + OnlineCheat Detection
+]]
+
+-- ==================== UNCFG (Деактивация конфига) ====================
+local activeCFG = nil
+local activeCFGCommands = {}
+
+local function DeactivateCFG()
+    if not activeCFG then
+        Notify("⚠️ No active config")
+        return
+    end
+    
+    -- Выключаем все функции из активного конфига
+    for _, cmd in ipairs(activeCFGCommands) do
+        local args = cmd:lower():split(" ")
+        local command = args[1]
+        
+        -- Автоматическое отключение
+        if command == "fly" then
+            ExecuteCommand("unfly")
+        elseif command == "god" then
+            ExecuteCommand("ungod")
+        elseif command == "speed" then
+            ExecuteCommand("unspeed")
+        elseif command == "noclip" then
+            ExecuteCommand("unnoclip")
+        elseif command == "spider" then
+            ExecuteCommand("unspider")
+        elseif command == "espall" then
+            ExecuteCommand("unesp")
+        elseif command == "chams" then
+            ExecuteCommand("unchams")
+        elseif command == "invis" then
+            ExecuteCommand("vis")
+        elseif command == "tpclick" then
+            ExecuteCommand("untpclick")
+        elseif command == "autotpgun" then
+            ExecuteCommand("unautotpgun")
+        end
+    end
+    
+    Notify("🔴 Config '" .. activeCFG .. "' disabled")
+    activeCFG = nil
+    activeCFGCommands = {}
+end
+
+-- ==================== AUTO TP GUN (MM2) ====================
+local autoTPGunEnabled = false
+local autoTPGunConnection
+
+local function EnableAutoTPGun()
+    if autoTPGunEnabled then return end
+    autoTPGunEnabled = true
+    
+    Notify("🔫 Auto TP Gun ON")
+    
+    autoTPGunConnection = RunService.Heartbeat:Connect(function()
+        if not autoTPGunEnabled or not RootPart then return end
+        
+        -- Ищем GunDrop
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj.Name == "GunDrop" and obj:IsA("Model") then
+                local handle = obj:FindFirstChild("Handle")
+                if handle then
+                    -- Позиция пистолета
+                    local gunPos = handle.Position
+                    
+                    -- Проверяем безопасность позиции
+                    local safeHeight = gunPos.Y + 4
+                    
+                    -- Проверяем, есть ли под нами пол
+                    local ray = Ray.new(
+                        Vector3.new(gunPos.X, gunPos.Y + 10, gunPos.Z),
+                        Vector3.new(0, -50, 0)
+                    )
+                    
+                    local hit, hitPos = workspace:FindPartOnRayWithIgnoreList(
+                        ray,
+                        {Character, obj}
+                    )
+                    
+                    if hit then
+                        -- Безопасная позиция над пистолетом
+                        local tpPos = Vector3.new(gunPos.X, hitPos.Y + 5, gunPos.Z)
+                        RootPart.CFrame = CFrame.new(tpPos)
+                        
+                        -- Небольшая задержка для подбора
+                        task.wait(0.3)
+                        
+                        -- Проверяем, подобрали ли пистолет
+                        if LocalPlayer.Backpack:FindFirstChild("Gun") or Character:FindFirstChild("Gun") then
+                            autoTPGunEnabled = false
+                            if autoTPGunConnection then
+                                autoTPGunConnection:Disconnect()
+                            end
+                            Notify("✅ Gun grabbed!")
+                        end
+                        
+                        return
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function DisableAutoTPGun()
+    autoTPGunEnabled = false
+    if autoTPGunConnection then
+        autoTPGunConnection:Disconnect()
+        autoTPGunConnection = nil
+    end
+    Notify("🔫 Auto TP Gun OFF")
+end
+
+-- ==================== ONLINE CHEAT DETECTION ====================
+local OnlineCheatFrame
+local cheatDetectionActive = false
+local detectedCheaters = {}
+
+local function CreateOnlineCheatUI()
+    OnlineCheatFrame = Instance.new("Frame")
+    OnlineCheatFrame.Name = "OnlineCheat"
+    OnlineCheatFrame.Parent = ScreenGui
+    OnlineCheatFrame.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
+    OnlineCheatFrame.BorderSizePixel = 0
+    OnlineCheatFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    OnlineCheatFrame.Size = UDim2.new(0, 500, 0, 400)
+    OnlineCheatFrame.Visible = false
+    OnlineCheatFrame.Active = true
+    OnlineCheatFrame.Draggable = true
+    
+    local OCCorner = Instance.new("UICorner")
+    OCCorner.CornerRadius = UDim.new(0, 5)
+    OCCorner.Parent = OnlineCheatFrame
+    
+    -- Title
+    local OCTitle = Instance.new("TextLabel")
+    OCTitle.Parent = OnlineCheatFrame
+    OCTitle.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+    OCTitle.BorderSizePixel = 0
+    OCTitle.Size = UDim2.new(1, 0, 0, 40)
+    OCTitle.Font = Enum.Font.Code
+    OCTitle.Text = "🔍 Online Cheaters Detection"
+    OCTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    OCTitle.TextSize = 18
+    
+    local OCTitleCorner = Instance.new("UICorner")
+    OCTitleCorner.CornerRadius = UDim.new(0, 5)
+    OCTitleCorner.Parent = OCTitle
+    
+    -- Close Button
+    local OCCloseBtn = Instance.new("TextButton")
+    OCCloseBtn.Parent = OCTitle
+    OCCloseBtn.BackgroundTransparency = 1
+    OCCloseBtn.Position = UDim2.new(1, -40, 0, 0)
+    OCCloseBtn.Size = UDim2.new(0, 40, 0, 40)
+    OCCloseBtn.Font = Enum.Font.Code
+    OCCloseBtn.Text = "X"
+    OCCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    OCCloseBtn.TextSize = 18
+    
+    -- Info Label
+    local InfoLabel = Instance.new("TextLabel")
+    InfoLabel.Parent = OnlineCheatFrame
+    InfoLabel.BackgroundTransparency = 1
+    InfoLabel.Position = UDim2.new(0, 10, 0, 45)
+    InfoLabel.Size = UDim2.new(1, -20, 0, 20)
+    InfoLabel.Font = Enum.Font.Code
+    InfoLabel.Text = "Auto-scanning every 3 seconds..."
+    InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    InfoLabel.TextSize = 12
+    InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Scroll Frame
+    local OCScroll = Instance.new("ScrollingFrame")
+    OCScroll.Parent = OnlineCheatFrame
+    OCScroll.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+    OCScroll.BorderSizePixel = 0
+    OCScroll.Position = UDim2.new(0, 10, 0, 70)
+    OCScroll.Size = UDim2.new(1, -20, 1, -80)
+    OCScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    OCScroll.ScrollBarThickness = 5
+    
+    local OCScrollCorner = Instance.new("UICorner")
+    OCScrollCorner.CornerRadius = UDim.new(0, 3)
+    OCScrollCorner.Parent = OCScroll
+    
+    local OCLayout = Instance.new("UIListLayout")
+    OCLayout.Parent = OCScroll
+    OCLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    OCLayout.Padding = UDim.new(0, 5)
+    
+    OCCloseBtn.MouseButton1Click:Connect(function()
+        OnlineCheatFrame.Visible = false
+    end)
+    
+    -- Обнаружение читеров
+    local function DetectCheaters()
+        detectedCheaters = {}
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local char = player.Character
+                local hum = char:FindFirstChild("Humanoid")
+                local root = char:FindFirstChild("HumanoidRootPart")
+                
+                local suspicionLevel = 0
+                local reasons = {}
+                
+                if hum then
+                    -- Проверка скорости
+                    if hum.WalkSpeed > 30 then
+                        suspicionLevel = suspicionLevel + 2
+                        table.insert(reasons, "⚡Speed: " .. math.floor(hum.WalkSpeed))
+                    end
+                    
+                    -- Проверка прыжка
+                    if hum.JumpPower > 60 then
+                        suspicionLevel = suspicionLevel + 1
+                        table.insert(reasons, "🦘Jump: " .. math.floor(hum.JumpPower))
+                    end
+                    
+                    -- Проверка здоровья
+                    if hum.MaxHealth > 200 or hum.Health > 200 then
+                        suspicionLevel = suspicionLevel + 3
+                        table.insert(reasons, "🛡️God Mode")
+                    end
+                end
+                
+                -- Проверка полета
+                if root then
+                    local bodyGyro = root:FindFirstChildOfClass("BodyGyro")
+                    local bodyVel = root:FindFirstChildOfClass("BodyVelocity")
+                    if bodyGyro and bodyVel then
+                        suspicionLevel = suspicionLevel + 3
+                        table.insert(reasons, "✈️Flying")
+                    end
+                end
+                
+                -- Проверка невидимости
+                if char:FindFirstChild("Head") then
+                    if char.Head.Transparency > 0.9 then
+                        suspicionLevel = suspicionLevel + 2
+                        table.insert(reasons, "👻Invisible")
+                    end
+                end
+                
+                -- Проверка noclip
+                local noclipDetected = true
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        noclipDetected = false
+                        break
+                    end
+                end
+                if noclipDetected then
+                    suspicionLevel = suspicionLevel + 2
+                    table.insert(reasons, "🚪NoClip")
+                end
+                
+                if suspicionLevel > 0 then
+                    table.insert(detectedCheaters, {
+                        player = player,
+                        level = suspicionLevel,
+                        reasons = reasons
+                    })
+                end
+            end
+        end
+        
+        -- Сортировка по уровню подозрения
+        table.sort(detectedCheaters, function(a, b)
+            return a.level > b.level
+        end)
+        
+        -- Обновление UI
+        for _, child in pairs(OCScroll:GetChildren()) do
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
+        end
+        
+        if #detectedCheaters == 0 then
+            local NoCheatersLabel = Instance.new("TextLabel")
+            NoCheatersLabel.Parent = OCScroll
+            NoCheatersLabel.BackgroundTransparency = 1
+            NoCheatersLabel.Size = UDim2.new(1, 0, 0, 50)
+            NoCheatersLabel.Font = Enum.Font.Code
+            NoCheatersLabel.Text = "✅ No cheaters detected"
+            NoCheatersLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            NoCheatersLabel.TextSize = 14
+        else
+            for i, cheater in ipairs(detectedCheaters) do
+                local CheaterFrame = Instance.new("Frame")
+                CheaterFrame.Parent = OCScroll
+                CheaterFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                CheaterFrame.BorderSizePixel = 0
+                CheaterFrame.Size = UDim2.new(1, 0, 0, 80)
+                
+                local CFCorner = Instance.new("UICorner")
+                CFCorner.CornerRadius = UDim.new(0, 3)
+                CFCorner.Parent = CheaterFrame
+                
+                -- Уровень опасности (цвет рамки)
+                local dangerColor
+                if cheater.level >= 5 then
+                    dangerColor = Color3.fromRGB(255, 0, 0) -- Красный
+                elseif cheater.level >= 3 then
+                    dangerColor = Color3.fromRGB(255, 150, 0) -- Оранжевый
+                else
+                    dangerColor = Color3.fromRGB(255, 255, 0) -- Желтый
+                end
+                
+                local DangerStroke = Instance.new("UIStroke")
+                DangerStroke.Color = dangerColor
+                DangerStroke.Thickness = 2
+                DangerStroke.Parent = CheaterFrame
+                
+                local PlayerName = Instance.new("TextLabel")
+                PlayerName.Parent = CheaterFrame
+                PlayerName.BackgroundTransparency = 1
+                PlayerName.Position = UDim2.new(0, 10, 0, 5)
+                PlayerName.Size = UDim2.new(1, -20, 0, 20)
+                PlayerName.Font = Enum.Font.Code
+                PlayerName.Text = "👤 " .. cheater.player.Name
+                PlayerName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                PlayerName.TextSize = 15
+                PlayerName.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local SuspicionLevel = Instance.new("TextLabel")
+                SuspicionLevel.Parent = CheaterFrame
+                SuspicionLevel.BackgroundTransparency = 1
+                SuspicionLevel.Position = UDim2.new(0, 10, 0, 28)
+                SuspicionLevel.Size = UDim2.new(1, -20, 0, 18)
+                SuspicionLevel.Font = Enum.Font.Code
+                
+                local dangerText
+                if cheater.level >= 5 then
+                    dangerText = "🔴 HIGH DANGER"
+                elseif cheater.level >= 3 then
+                    dangerText = "🟠 MEDIUM"
+                else
+                    dangerText = "🟡 LOW"
+                end
+                
+                SuspicionLevel.Text = dangerText .. " | Level: " .. cheater.level .. "/10"
+                SuspicionLevel.TextColor3 = dangerColor
+                SuspicionLevel.TextSize = 13
+                SuspicionLevel.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Reasons = Instance.new("TextLabel")
+                Reasons.Parent = CheaterFrame
+                Reasons.BackgroundTransparency = 1
+                Reasons.Position = UDim2.new(0, 10, 0, 50)
+                Reasons.Size = UDim2.new(1, -20, 0, 25)
+                Reasons.Font = Enum.Font.Code
+                Reasons.Text = table.concat(cheater.reasons, " | ")
+                Reasons.TextColor3 = Color3.fromRGB(200, 200, 200)
+                Reasons.TextSize = 11
+                Reasons.TextXAlignment = Enum.TextXAlignment.Left
+                Reasons.TextWrapped = true
+            end
+        end
+        
+        OCScroll.CanvasSize = UDim2.new(0, 0, 0, OCLayout.AbsoluteContentSize.Y + 10)
+    end
+    
+    -- Автообновление каждые 3 секунды
+    task.spawn(function()
+        while true do
+            if OnlineCheatFrame.Visible then
+                DetectCheaters()
+            end
+            task.wait(3)
+        end
+    end)
+    
+    OCLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        OCScroll.CanvasSize = UDim2.new(0, 0, 0, OCLayout.AbsoluteContentSize.Y + 10)
+    end)
+end
+
+CreateOnlineCheatUI()
+
+-- ==================== ОБНОВЛЕНИЕ КОМАНД ====================
+table.insert(commands, {name = "uncfg", desc = "Disable active config"})
+table.insert(commands, {name = "autotpgun", desc = "Auto TP to gun when it spawns (MM2)"})
+table.insert(commands, {name = "unautotpgun", desc = "Disable auto TP gun"})
+table.insert(commands, {name = "onlinecheat", desc = "Detect cheaters on server"})
+
+UpdateCommandList()
+
+-- ==================== ОБНОВЛЕНИЕ ОБРАБОТЧИКА КОМАНД ====================
+local originalExecuteCommand3 = ExecuteCommand
+
+function ExecuteCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    if command == "uncfg" then
+        DeactivateCFG()
+        
+    elseif command == "autotpgun" then
+        EnableAutoTPGun()
+        
+    elseif command == "unautotpgun" then
+        DisableAutoTPGun()
+        
+    elseif command == "onlinecheat" then
+        OnlineCheatFrame.Visible = not OnlineCheatFrame.Visible
+        if OnlineCheatFrame.Visible then
+            Notify("🔍 Scanning for cheaters...")
+        end
+        
+    -- Обновление CFG команды с сохранением активного конфига
+    elseif command == "cfg" then
+        if args[2] == "create" and args[3] then
+            currentCFGName = args[3]
+            tempCommands = {}
+            CFGFrame.Visible = true
+            
+            for _, child in pairs(CFGCommandsList:GetChildren()) do
+                if child:IsA("Frame") then
+                    child:Destroy()
+                end
+            end
+            
+            Notify("📝 Creating config: " .. currentCFGName)
+            
+        elseif args[2] and savedConfigs[args[2]] then
+            local configName = args[2]
+            activeCFG = configName
+            activeCFGCommands = {}
+            
+            -- Копируем команды
+            for _, cmd in ipairs(savedConfigs[configName]) do
+                table.insert(activeCFGCommands, cmd)
+            end
+            
+            Notify("⚙️ Loading: " .. configName)
+            
+            task.wait(0.5)
+            
+            for _, savedCmd in ipairs(savedConfigs[configName]) do
+                ExecuteCommand(savedCmd)
+                task.wait(0.1)
+            end
+            
+            Notify("✅ Config '" .. configName .. "' active")
+        else
+            Notify("❌ Config not found!")
+        end
+        
+    else
+        originalExecuteCommand3(cmd)
+    end
+end
+
+-- ==================== АВТООБНОВЛЕНИЕ РЕСПАВН ====================
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    RootPart = char:WaitForChild("HumanoidRootPart")
+    
+    DisableAutoTPGun()
+end)
+
+print("[IY] UnCFG loaded")
+print("[IY] AutoTPGun (MM2) loaded")
+print("[IY] OnlineCheat detector loaded")
+
+--[[
+    КОД 6 из 6
+    Sheriff ESP + Murder ESP (Murder Mystery 2)
+]]
+
+-- ==================== SHERIFF ESP (MM2) ====================
+local sheriffESPEnabled = false
+local sheriffESPObjects = {}
+local sheriffPlayer = nil
+
+local function FindSheriff()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local backpack = player.Backpack
+            local char = player.Character
+            
+            -- Проверяем наличие пистолета
+            if backpack:FindFirstChild("Gun") or char:FindFirstChild("Gun") then
+                return player
+            end
+        end
+    end
+    return nil
+end
+
+local function CreateSheriffESP(player)
+    if not player or not player.Character then return end
+    
+    local char = player.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not root or not hum then return end
+    
+    sheriffPlayer = player
+    
+    -- Billboard
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "SheriffESP"
+    billboard.Parent = root
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 120)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = billboard
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    nameLabel.Font = Enum.Font.Code
+    nameLabel.Text = "👮 SHERIFF"
+    nameLabel.TextColor3 = Color3.fromRGB(0, 150, 255)
+    nameLabel.TextSize = 18
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Parent = billboard
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.Position = UDim2.new(0, 0, 0.25, 0)
+    playerNameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    playerNameLabel.Font = Enum.Font.Code
+    playerNameLabel.Text = player.Name
+    playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerNameLabel.TextSize = 14
+    playerNameLabel.TextStrokeTransparency = 0
+    
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Parent = billboard
+    distLabel.BackgroundTransparency = 1
+    distLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    distLabel.Font = Enum.Font.Code
+    distLabel.Text = "Distance: 0"
+    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distLabel.TextSize = 13
+    distLabel.TextStrokeTransparency = 0
+    
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Parent = billboard
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Position = UDim2.new(0, 0, 0.75, 0)
+    healthLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    healthLabel.Font = Enum.Font.Code
+    healthLabel.Text = "HP: " .. math.floor(hum.Health)
+    healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    healthLabel.TextSize = 13
+    healthLabel.TextStrokeTransparency = 0
+    
+    -- Highlight (скелет)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "SheriffHighlight"
+    highlight.Parent = char
+    highlight.FillColor = Color3.fromRGB(0, 150, 255)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    
+    -- Обновление расстояния и здоровья
+    local updateConn
+    updateConn = RunService.RenderStepped:Connect(function()
+        if not sheriffESPEnabled or not root or not root.Parent or not RootPart then
+            if updateConn then updateConn:Disconnect() end
+            return
+        end
+        
+        local distance = (RootPart.Position - root.Position).Magnitude
+        distLabel.Text = "📏 Distance: " .. math.floor(distance) .. " studs"
+        healthLabel.Text = "❤️ HP: " .. math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth)
+        
+        -- Изменение цвета здоровья
+        if hum.Health > hum.MaxHealth * 0.6 then
+            healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        elseif hum.Health > hum.MaxHealth * 0.3 then
+            healthLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        else
+            healthLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end)
+    
+    table.insert(sheriffESPObjects, {billboard, highlight, updateConn})
+end
+
+local function EnableSheriffESP()
+    if sheriffESPEnabled then
+        Notify("⚠️ Sheriff ESP already ON")
+        return
+    end
+    
+    sheriffESPEnabled = true
+    local sheriff = FindSheriff()
+    if sheriff then
+        CreateSheriffESP(sheriff)
+        Notify("👮 Sheriff ESP ON")
+    else
+        Notify("⚠️ Sheriff not found (round not started?)")
+        sheriffESPEnabled = false
+    end
+end
+
+local function DisableSheriffESP()
+    sheriffESPEnabled = false
+    sheriffPlayer = nil
+    for _, obj in pairs(sheriffESPObjects) do
+        if obj[1] then obj[1]:Destroy() end
+        if obj[2] then obj[2]:Destroy() end
+        if obj[3] then obj[3]:Disconnect() end
+    end
+    sheriffESPObjects = {}
+    Notify("👮 Sheriff ESP OFF")
+end
+
+-- ==================== MURDER ESP (MM2) ====================
+local murderESPEnabled = false
+local murderESPObjects = {}
+local murdererPlayer = nil
+
+local function FindMurderer()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local backpack = player.Backpack
+            local char = player.Character
+            
+            -- Проверяем наличие ножа
+            if backpack:FindFirstChild("Knife") or char:FindFirstChild("Knife") then
+                return player
+            end
+        end
+    end
+    return nil
+end
+
+local function CreateMurderESP(player)
+    if not player or not player.Character then return end
+    
+    local char = player.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not root or not hum then return end
+    
+    murdererPlayer = player
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "MurderESP"
+    billboard.Parent = root
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 120)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = billboard
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    nameLabel.Font = Enum.Font.Code
+    nameLabel.Text = "🔪 MURDERER"
+    nameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    nameLabel.TextSize = 18
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Parent = billboard
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.Position = UDim2.new(0, 0, 0.25, 0)
+    playerNameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    playerNameLabel.Font = Enum.Font.Code
+    playerNameLabel.Text = player.Name
+    playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerNameLabel.TextSize = 14
+    playerNameLabel.TextStrokeTransparency = 0
+    
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Parent = billboard
+    distLabel.BackgroundTransparency = 1
+    distLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    distLabel.Font = Enum.Font.Code
+    distLabel.Text = "Distance: 0"
+    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distLabel.TextSize = 13
+    distLabel.TextStrokeTransparency = 0
+    
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Parent = billboard
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Position = UDim2.new(0, 0, 0.75, 0)
+    healthLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    healthLabel.Font = Enum.Font.Code
+    healthLabel.Text = "HP: " .. math.floor(hum.Health)
+    healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    healthLabel.TextSize = 13
+    healthLabel.TextStrokeTransparency = 0
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "MurderHighlight"
+    highlight.Parent = char
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    
+    local updateConn
+    updateConn = RunService.RenderStepped:Connect(function()
+        if not murderESPEnabled or not root or not root.Parent or not RootPart then
+            if updateConn then updateConn:Disconnect() end
+            return
+        end
+        
+        local distance = (RootPart.Position - root.Position).Magnitude
+        distLabel.Text = "📏 Distance: " .. math.floor(distance) .. " studs"
+        healthLabel.Text = "❤️ HP: " .. math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth)
+        
+        if hum.Health > hum.MaxHealth * 0.6 then
+            healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        elseif hum.Health > hum.MaxHealth * 0.3 then
+            healthLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        else
+            healthLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end)
+    
+    table.insert(murderESPObjects, {billboard, highlight, updateConn})
+end
+
+local function EnableMurderESP()
+    if murderESPEnabled then
+        Notify("⚠️ Murder ESP already ON")
+        return
+    end
+    
+    murderESPEnabled = true
+    local murderer = FindMurderer()
+    if murderer then
+        CreateMurderESP(murderer)
+        Notify("🔪 Murder ESP ON")
+    else
+        Notify("⚠️ Murderer not found (round not started?)")
+        murderESPEnabled = false
+    end
+end
+
+local function DisableMurderESP()
+    murderESPEnabled = false
+    murdererPlayer = nil
+    for _, obj in pairs(murderESPObjects) do
+        if obj[1] then obj[1]:Destroy() end
+        if obj[2] then obj[2]:Destroy() end
+        if obj[3] then obj[3]:Disconnect() end
+    end
+    murderESPObjects = {}
+    Notify("🔪 Murder ESP OFF")
+end
+
+-- ==================== АВТООБНОВЛЕНИЕ ESP ====================
+task.spawn(function()
+    while true do
+        task.wait(3)
+        
+        -- Обновляем Sheriff ESP
+        if sheriffESPEnabled then
+            local currentSheriff = FindSheriff()
+            if currentSheriff and currentSheriff ~= sheriffPlayer then
+                DisableSheriffESP()
+                task.wait(0.2)
+                EnableSheriffESP()
+            elseif not currentSheriff then
+                DisableSheriffESP()
+            end
+        end
+        
+        -- Обновляем Murder ESP
+        if murderESPEnabled then
+            local currentMurderer = FindMurderer()
+            if currentMurderer and currentMurderer ~= murdererPlayer then
+                DisableMurderESP()
+                task.wait(0.2)
+                EnableMurderESP()
+            elseif not currentMurderer then
+                DisableMurderESP()
+            end
+        end
+    end
+end)
+
+-- ==================== ОБНОВЛЕНИЕ КОМАНД ====================
+table.insert(commands, {name = "sheriff", desc = "ESP on sheriff with distance/HP/skeleton (MM2)"})
+table.insert(commands, {name = "unsheriff", desc = "Disable sheriff ESP"})
+table.insert(commands, {name = "murder", desc = "ESP on murderer with distance/HP/skeleton (MM2)"})
+table.insert(commands, {name = "unmurder", desc = "Disable murder ESP"})
+
+UpdateCommandList()
+
+-- ==================== ОБНОВЛЕНИЕ ОБРАБОТЧИКА КОМАНД ====================
+local originalExecuteCommand4 = ExecuteCommand
+
+function ExecuteCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    if command == "sheriff" then
+        EnableSheriffESP()
+        
+    elseif command == "unsheriff" then
+        DisableSheriffESP()
+        
+    elseif command == "murder" then
+        EnableMurderESP()
+        
+    elseif command == "unmurder" then
+        DisableMurderESP()
+        
+    else
+        originalExecuteCommand4(cmd)
+    end
+end
+
+-- ==================== РЕСПАВН ====================
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    RootPart = char:WaitForChild("HumanoidRootPart")
+    
+    DisableSheriffESP()
+    DisableMurderESP()
+end)
+
+print("[IY] Sheriff ESP (MM2) loaded")
+print("[IY] Murder ESP (MM2) loaded")
+print("[IY] All systems operational! ✅")
