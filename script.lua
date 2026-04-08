@@ -1064,3 +1064,467 @@ end)
 
 print("[IY] Extended functions loaded")
 print("[IY] New commands: invis, vis, speed [num], unspeed, tpclick, untpclick")
+
+--[[
+    КОД 4 из 4
+    CFG System + Spider + TPGun
+]]
+
+-- ==================== CFG SYSTEM ====================
+local savedConfigs = {}
+local CFGFrame
+local CFGCommandsList
+local currentCFGName = ""
+local tempCommands = {}
+
+-- Создание CFG UI
+local function CreateCFGUI()
+    CFGFrame = Instance.new("Frame")
+    CFGFrame.Name = "CFGFrame"
+    CFGFrame.Parent = ScreenGui
+    CFGFrame.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
+    CFGFrame.BorderSizePixel = 0
+    CFGFrame.Position = UDim2.new(0.5, -200, 0.5, -200)
+    CFGFrame.Size = UDim2.new(0, 400, 0, 400)
+    CFGFrame.Visible = false
+    CFGFrame.Active = true
+    CFGFrame.Draggable = true
+    
+    local CFGCorner = Instance.new("UICorner")
+    CFGCorner.CornerRadius = UDim.new(0, 5)
+    CFGCorner.Parent = CFGFrame
+    
+    -- Title Bar
+    local CFGTitle = Instance.new("TextLabel")
+    CFGTitle.Parent = CFGFrame
+    CFGTitle.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+    CFGTitle.BorderSizePixel = 0
+    CFGTitle.Size = UDim2.new(1, 0, 0, 40)
+    CFGTitle.Font = Enum.Font.Code
+    CFGTitle.Text = "CFG Creator"
+    CFGTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CFGTitle.TextSize = 18
+    
+    local CFGTitleCorner = Instance.new("UICorner")
+    CFGTitleCorner.CornerRadius = UDim.new(0, 5)
+    CFGTitleCorner.Parent = CFGTitle
+    
+    -- Close Button
+    local CFGCloseBtn = Instance.new("TextButton")
+    CFGCloseBtn.Parent = CFGTitle
+    CFGCloseBtn.BackgroundTransparency = 1
+    CFGCloseBtn.Position = UDim2.new(1, -40, 0, 0)
+    CFGCloseBtn.Size = UDim2.new(0, 40, 0, 40)
+    CFGCloseBtn.Font = Enum.Font.Code
+    CFGCloseBtn.Text = "X"
+    CFGCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CFGCloseBtn.TextSize = 18
+    
+    -- CFG Name Label
+    local CFGNameLabel = Instance.new("TextLabel")
+    CFGNameLabel.Parent = CFGFrame
+    CFGNameLabel.BackgroundTransparency = 1
+    CFGNameLabel.Position = UDim2.new(0, 10, 0, 50)
+    CFGNameLabel.Size = UDim2.new(1, -20, 0, 30)
+    CFGNameLabel.Font = Enum.Font.Code
+    CFGNameLabel.Text = "Config: " .. currentCFGName
+    CFGNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CFGNameLabel.TextSize = 14
+    CFGNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Command Input
+    local CmdInput = Instance.new("TextBox")
+    CmdInput.Parent = CFGFrame
+    CmdInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    CmdInput.BorderSizePixel = 0
+    CmdInput.Position = UDim2.new(0, 10, 0, 90)
+    CmdInput.Size = UDim2.new(1, -90, 0, 35)
+    CmdInput.Font = Enum.Font.Code
+    CmdInput.PlaceholderText = "Enter command..."
+    CmdInput.Text = ""
+    CmdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CmdInput.TextSize = 14
+    
+    local CmdInputCorner = Instance.new("UICorner")
+    CmdInputCorner.CornerRadius = UDim.new(0, 3)
+    CmdInputCorner.Parent = CmdInput
+    
+    -- Add Button (+)
+    local AddBtn = Instance.new("TextButton")
+    AddBtn.Parent = CFGFrame
+    AddBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    AddBtn.BorderSizePixel = 0
+    AddBtn.Position = UDim2.new(1, -70, 0, 90)
+    AddBtn.Size = UDim2.new(0, 60, 0, 35)
+    AddBtn.Font = Enum.Font.Code
+    AddBtn.Text = "+"
+    AddBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    AddBtn.TextSize = 24
+    
+    local AddBtnCorner = Instance.new("UICorner")
+    AddBtnCorner.CornerRadius = UDim.new(0, 3)
+    AddBtnCorner.Parent = AddBtn
+    
+    -- Commands List
+    CFGCommandsList = Instance.new("ScrollingFrame")
+    CFGCommandsList.Parent = CFGFrame
+    CFGCommandsList.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+    CFGCommandsList.BorderSizePixel = 0
+    CFGCommandsList.Position = UDim2.new(0, 10, 0, 135)
+    CFGCommandsList.Size = UDim2.new(1, -20, 0, 200)
+    CFGCommandsList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    CFGCommandsList.ScrollBarThickness = 5
+    
+    local CFGListCorner = Instance.new("UICorner")
+    CFGListCorner.CornerRadius = UDim.new(0, 3)
+    CFGListCorner.Parent = CFGCommandsList
+    
+    local CFGListLayout = Instance.new("UIListLayout")
+    CFGListLayout.Parent = CFGCommandsList
+    CFGListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    CFGListLayout.Padding = UDim.new(0, 5)
+    
+    -- Save Button
+    local SaveBtn = Instance.new("TextButton")
+    SaveBtn.Parent = CFGFrame
+    SaveBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    SaveBtn.BorderSizePixel = 0
+    SaveBtn.Position = UDim2.new(0, 10, 0, 345)
+    SaveBtn.Size = UDim2.new(0.5, -15, 0, 45)
+    SaveBtn.Font = Enum.Font.Code
+    SaveBtn.Text = "💾 SAVE"
+    SaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SaveBtn.TextSize = 16
+    
+    local SaveBtnCorner = Instance.new("UICorner")
+    SaveBtnCorner.CornerRadius = UDim.new(0, 3)
+    SaveBtnCorner.Parent = SaveBtn
+    
+    -- Cancel Button
+    local CancelBtn = Instance.new("TextButton")
+    CancelBtn.Parent = CFGFrame
+    CancelBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    CancelBtn.BorderSizePixel = 0
+    CancelBtn.Position = UDim2.new(0.5, 5, 0, 345)
+    CancelBtn.Size = UDim2.new(0.5, -15, 0, 45)
+    CancelBtn.Font = Enum.Font.Code
+    CancelBtn.Text = "✕ CANCEL"
+    CancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CancelBtn.TextSize = 16
+    
+    local CancelBtnCorner = Instance.new("UICorner")
+    CancelBtnCorner.CornerRadius = UDim.new(0, 3)
+    CancelBtnCorner.Parent = CancelBtn
+    
+    -- Add Command Function
+    AddBtn.MouseButton1Click:Connect(function()
+        local cmdText = CmdInput.Text
+        if cmdText ~= "" then
+            table.insert(tempCommands, cmdText)
+            
+            local CmdItem = Instance.new("Frame")
+            CmdItem.Parent = CFGCommandsList
+            CmdItem.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            CmdItem.BorderSizePixel = 0
+            CmdItem.Size = UDim2.new(1, 0, 0, 35)
+            
+            local CmdItemCorner = Instance.new("UICorner")
+            CmdItemCorner.CornerRadius = UDim.new(0, 3)
+            CmdItemCorner.Parent = CmdItem
+            
+            local CmdText = Instance.new("TextLabel")
+            CmdText.Parent = CmdItem
+            CmdText.BackgroundTransparency = 1
+            CmdText.Position = UDim2.new(0, 10, 0, 0)
+            CmdText.Size = UDim2.new(1, -50, 1, 0)
+            CmdText.Font = Enum.Font.Code
+            CmdText.Text = cmdText
+            CmdText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            CmdText.TextSize = 13
+            CmdText.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local RemoveBtn = Instance.new("TextButton")
+            RemoveBtn.Parent = CmdItem
+            RemoveBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+            RemoveBtn.BorderSizePixel = 0
+            RemoveBtn.Position = UDim2.new(1, -35, 0, 5)
+            RemoveBtn.Size = UDim2.new(0, 30, 0, 25)
+            RemoveBtn.Font = Enum.Font.Code
+            RemoveBtn.Text = "✕"
+            RemoveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            RemoveBtn.TextSize = 14
+            
+            local RemoveBtnCorner = Instance.new("UICorner")
+            RemoveBtnCorner.CornerRadius = UDim.new(0, 3)
+            RemoveBtnCorner.Parent = RemoveBtn
+            
+            RemoveBtn.MouseButton1Click:Connect(function()
+                for i, cmd in ipairs(tempCommands) do
+                    if cmd == cmdText then
+                        table.remove(tempCommands, i)
+                        break
+                    end
+                end
+                CmdItem:Destroy()
+                CFGCommandsList.CanvasSize = UDim2.new(0, 0, 0, CFGListLayout.AbsoluteContentSize.Y)
+            end)
+            
+            CmdInput.Text = ""
+            CFGCommandsList.CanvasSize = UDim2.new(0, 0, 0, CFGListLayout.AbsoluteContentSize.Y)
+        end
+    end)
+    
+    -- Save Config
+    SaveBtn.MouseButton1Click:Connect(function()
+        if #tempCommands > 0 then
+            savedConfigs[currentCFGName] = tempCommands
+            Notify("💾 Config '" .. currentCFGName .. "' saved!")
+            CFGFrame.Visible = false
+            tempCommands = {}
+        else
+            Notify("⚠️ Add commands first!")
+        end
+    end)
+    
+    -- Cancel
+    CancelBtn.MouseButton1Click:Connect(function()
+        CFGFrame.Visible = false
+        tempCommands = {}
+    end)
+    
+    CFGCloseBtn.MouseButton1Click:Connect(function()
+        CFGFrame.Visible = false
+        tempCommands = {}
+    end)
+    
+    CFGListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        CFGCommandsList.CanvasSize = UDim2.new(0, 0, 0, CFGListLayout.AbsoluteContentSize.Y)
+    end)
+end
+
+CreateCFGUI()
+
+-- ==================== SPIDER (Лазание по стенам) ====================
+local spiderEnabled = false
+local spiderConnection
+
+local function EnableSpider()
+    if spiderEnabled then return end
+    spiderEnabled = true
+    
+    spiderConnection = RunService.Heartbeat:Connect(function()
+        if not spiderEnabled or not Character or not Humanoid then return end
+        
+        -- Проверяем столкновение со стенами
+        local ray = Ray.new(
+            RootPart.Position,
+            RootPart.CFrame.LookVector * 2
+        )
+        
+        local hit, position, normal = workspace:FindPartOnRayWithIgnoreList(
+            ray,
+            {Character}
+        )
+        
+        if hit and hit:IsA("BasePart") then
+            -- Если касаемся стены/потолка
+            local bodyVel = RootPart:FindFirstChild("SpiderVelocity")
+            if not bodyVel then
+                bodyVel = Instance.new("BodyVelocity")
+                bodyVel.Name = "SpiderVelocity"
+                bodyVel.MaxForce = Vector3.new(0, 0, 0)
+                bodyVel.Parent = RootPart
+            end
+            
+            -- Проверяем нажатие клавиш
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                bodyVel.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyVel.Velocity = normal * -20 -- Движение к стене
+            elseif UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                bodyVel.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyVel.Velocity = normal * 20 -- Отталкивание от стены
+            else
+                bodyVel.MaxForce = Vector3.new(0, 4000, 0)
+                bodyVel.Velocity = Vector3.new(0, 2, 0) -- Удержание на стене
+            end
+            
+            Humanoid.PlatformStand = false
+        else
+            -- Если не касаемся стены, убираем BodyVelocity
+            local bodyVel = RootPart:FindFirstChild("SpiderVelocity")
+            if bodyVel then
+                bodyVel:Destroy()
+            end
+        end
+    end)
+    
+    Notify("🕷️ Spider ON")
+end
+
+local function DisableSpider()
+    spiderEnabled = false
+    if spiderConnection then
+        spiderConnection:Disconnect()
+        spiderConnection = nil
+    end
+    
+    local bodyVel = RootPart:FindFirstChild("SpiderVelocity")
+    if bodyVel then
+        bodyVel:Destroy()
+    end
+    
+    Notify("🕷️ Spider OFF")
+end
+
+-- ==================== TPGUN (Murder Mystery 2) ====================
+local function TPToGun()
+    if not workspace:FindFirstChild("Normal") then
+        Notify("⚠️ Not in MM2 game")
+        return
+    end
+    
+    local found = false
+    
+    -- Ищем GunDrop (упавший пистолет)
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "GunDrop" and obj:IsA("Model") then
+            local handle = obj:FindFirstChild("Handle")
+            if handle and RootPart then
+                RootPart.CFrame = handle.CFrame + Vector3.new(0, 3, 0)
+                Notify("🔫 TP to Gun!")
+                found = true
+                break
+            end
+        end
+    end
+    
+    -- Если не нашли GunDrop, ищем Gun в руках шерифа
+    if not found then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local gun = player.Character:FindFirstChild("Gun") or 
+                           player.Backpack:FindFirstChild("Gun")
+                
+                if gun and RootPart then
+                    -- ТП к шерифу (осторожно!)
+                    local sheriffRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                    if sheriffRoot then
+                        RootPart.CFrame = sheriffRoot.CFrame + Vector3.new(5, 0, 0)
+                        Notify("🔫 TP near Sheriff!")
+                        found = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+    
+    if not found then
+        Notify("❌ Gun not found!")
+    end
+end
+
+-- ==================== ОБНОВЛЕНИЕ КОМАНД ====================
+table.insert(commands, {name = "cfg create [name]", desc = "Create new config"})
+table.insert(commands, {name = "cfg [name]", desc = "Load saved config"})
+table.insert(commands, {name = "spider", desc = "Climb walls and ceilings"})
+table.insert(commands, {name = "unspider", desc = "Disable spider mode"})
+table.insert(commands, {name = "tpgun", desc = "TP to gun (MM2 only)"})
+
+UpdateCommandList()
+
+-- ==================== ОБНОВЛЕНИЕ ОБРАБОТЧИКА КОМАНД ====================
+local originalExecuteCommand2 = ExecuteCommand
+
+function ExecuteCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    -- CFG Commands
+    if command == "cfg" then
+        if args[2] == "create" and args[3] then
+            currentCFGName = args[3]
+            tempCommands = {}
+            CFGFrame.Visible = true
+            
+            -- Очищаем список команд
+            for _, child in pairs(CFGCommandsList:GetChildren()) do
+                if child:IsA("Frame") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Обновляем название
+            local nameLabel = CFGFrame:FindFirstChild("TextLabel", true)
+            if nameLabel and nameLabel.Text:find("Config:") then
+                nameLabel.Text = "Config: " .. currentCFGName
+            end
+            
+            Notify("📝 Creating config: " .. currentCFGName)
+            
+        elseif args[2] and savedConfigs[args[2]] then
+            -- Загрузка конфига
+            local configName = args[2]
+            Notify("⚙️ Loading: " .. configName)
+            
+            task.wait(0.5)
+            
+            for _, savedCmd in ipairs(savedConfigs[configName]) do
+                ExecuteCommand(savedCmd)
+                task.wait(0.1)
+            end
+            
+            Notify("✅ Config loaded!")
+        else
+            Notify("❌ Config not found!")
+        end
+        
+    -- Spider
+    elseif command == "spider" then
+        EnableSpider()
+        
+    elseif command == "unspider" then
+        DisableSpider()
+        
+    -- TPGun
+    elseif command == "tpgun" then
+        TPToGun()
+        
+    else
+        -- Старые команды
+        originalExecuteCommand2(cmd)
+    end
+end
+
+-- ==================== ВИЗУАЛЬНЫЙ ИНДИКАТОР SPIDER ====================
+local SpiderIndicator = Instance.new("TextLabel")
+SpiderIndicator.Parent = ScreenGui
+SpiderIndicator.BackgroundTransparency = 1
+SpiderIndicator.Position = UDim2.new(0, 10, 1, -110)
+SpiderIndicator.Size = UDim2.new(0, 150, 0, 30)
+SpiderIndicator.Font = Enum.Font.Code
+SpiderIndicator.Text = "🕷️ Spider Mode"
+SpiderIndicator.TextColor3 = Color3.fromRGB(150, 255, 150)
+SpiderIndicator.TextSize = 14
+SpiderIndicator.TextXAlignment = Enum.TextXAlignment.Left
+SpiderIndicator.TextStrokeTransparency = 0
+SpiderIndicator.Visible = false
+
+RunService.Heartbeat:Connect(function()
+    SpiderIndicator.Visible = spiderEnabled
+end)
+
+-- ==================== ОБНОВЛЕНИЕ ПРИ РЕСПАВНЕ ====================
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    RootPart = char:WaitForChild("HumanoidRootPart")
+    
+    -- Сброс spider
+    DisableSpider()
+end)
+
+print("[IY] CFG System loaded")
+print("[IY] Spider mode loaded")
+print("[IY] TPGun (MM2) loaded")
+print("[IY] Commands: cfg create [name], cfg [name], spider, unspider, tpgun")
