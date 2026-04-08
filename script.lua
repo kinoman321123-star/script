@@ -685,3 +685,382 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 AuthFrame:TweenPosition(UDim2.new(0.5, -200, 0.5, -100), "Out", "Quad", 0.5, true)
+
+--[[
+    КОД 3 из 3
+    Дополнительные функции
+]]
+
+-- Переменные для новых функций
+local isInvisible = false
+local originalTransparency = {}
+local speedEnabled = false
+local speedValue = 16
+local originalSpeed = 16
+local tpClickEnabled = false
+local tpClickConnection
+
+-- ==================== INVISIBILITY ====================
+local function EnableInvisibility()
+    if isInvisible then return end
+    isInvisible = true
+    
+    -- Сохраняем оригинальную прозрачность
+    for _, part in pairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") or part:IsA("Texture") then
+            originalTransparency[part] = part.Transparency
+            part.Transparency = 1
+        elseif part:IsA("Accessory") then
+            local handle = part:FindFirstChild("Handle")
+            if handle then
+                originalTransparency[handle] = handle.Transparency
+                handle.Transparency = 1
+            end
+        end
+    end
+    
+    -- Скрываем голову
+    if Character:FindFirstChild("Head") then
+        local face = Character.Head:FindFirstChild("face")
+        if face then
+            originalTransparency[face] = face.Transparency
+            face.Transparency = 1
+        end
+    end
+    
+    -- Делаем HumanoidRootPart видимым для себя (чтобы видеть где ты)
+    if RootPart then
+        RootPart.Transparency = 0.5
+    end
+    
+    Notify("👻 Invisible ON")
+end
+
+local function DisableInvisibility()
+    if not isInvisible then return end
+    isInvisible = false
+    
+    -- Восстанавливаем оригинальную прозрачность
+    for part, transparency in pairs(originalTransparency) do
+        if part and part.Parent then
+            part.Transparency = transparency
+        end
+    end
+    
+    originalTransparency = {}
+    Notify("👁️ Visible")
+end
+
+-- ==================== SPEED ====================
+local function SetSpeed(speed)
+    if not Humanoid then return end
+    speedEnabled = true
+    speedValue = math.clamp(speed, 16, 500)
+    
+    -- Сохраняем оригинальную скорость
+    if not originalSpeed or originalSpeed == speedValue then
+        originalSpeed = 16
+    end
+    
+    Humanoid.WalkSpeed = speedValue
+    Notify("🏃 Speed: " .. speedValue)
+end
+
+local function ResetSpeed()
+    speedEnabled = false
+    if Humanoid then
+        Humanoid.WalkSpeed = originalSpeed or 16
+    end
+    Notify("🚶 Normal Speed")
+end
+
+-- Постоянное обновление скорости (на случай если игра сбрасывает)
+RunService.Heartbeat:Connect(function()
+    if speedEnabled and Humanoid then
+        if Humanoid.WalkSpeed ~= speedValue then
+            Humanoid.WalkSpeed = speedValue
+        end
+    end
+end)
+
+-- ==================== TP CLICK (Mobile + Desktop) ====================
+local function EnableTPClick()
+    if tpClickEnabled then return end
+    tpClickEnabled = true
+    
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+    
+    if isMobile then
+        -- Для мобильных устройств (тап по экрану)
+        tpClickConnection = UserInputService.TouchTap:Connect(function(touchPositions, gameProcessed)
+            if gameProcessed then return end
+            if not RootPart then return end
+            
+            local touchPos = touchPositions[1]
+            if not touchPos then return end
+            
+            local camera = workspace.CurrentCamera
+            local unitRay = camera:ScreenPointToRay(touchPos.X, touchPos.Y)
+            local ray = Ray.new(unitRay.Origin, unitRay.Direction * 500)
+            
+            local hit, position = workspace:FindPartOnRayWithIgnoreList(
+                ray,
+                {Character, camera},
+                false,
+                true
+            )
+            
+            if hit then
+                RootPart.CFrame = CFrame.new(position + Vector3.new(0, 3, 0))
+            end
+        end)
+    else
+        -- Для ПК (клик мышью с зажатым Ctrl)
+        tpClickConnection = Mouse.Button1Down:Connect(function()
+            if not UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then return end
+            if not RootPart then return end
+            
+            local target = Mouse.Target
+            if target then
+                local position = Mouse.Hit.Position
+                RootPart.CFrame = CFrame.new(position + Vector3.new(0, 3, 0))
+            end
+        end)
+    end
+    
+    Notify("📍 TP Click ON")
+end
+
+local function DisableTPClick()
+    tpClickEnabled = false
+    if tpClickConnection then
+        tpClickConnection:Disconnect()
+        tpClickConnection = nil
+    end
+    Notify("📍 TP Click OFF")
+end
+
+-- ==================== ВИЗУАЛЬНЫЙ ИНДИКАТОР TP CLICK ====================
+local TPIndicator = Instance.new("Frame")
+TPIndicator.Name = "TPIndicator"
+TPIndicator.Parent = ScreenGui
+TPIndicator.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
+TPIndicator.BackgroundTransparency = 0.3
+TPIndicator.BorderSizePixel = 0
+TPIndicator.Position = UDim2.new(0.5, -100, 0, 10)
+TPIndicator.Size = UDim2.new(0, 200, 0, 30)
+TPIndicator.Visible = false
+
+local TPIndicatorCorner = Instance.new("UICorner")
+TPIndicatorCorner.CornerRadius = UDim.new(0, 5)
+TPIndicatorCorner.Parent = TPIndicator
+
+local TPIndicatorText = Instance.new("TextLabel")
+TPIndicatorText.Parent = TPIndicator
+TPIndicatorText.BackgroundTransparency = 1
+TPIndicatorText.Size = UDim2.new(1, 0, 1, 0)
+TPIndicatorText.Font = Enum.Font.Code
+TPIndicatorText.Text = "📍 Tap to Teleport"
+TPIndicatorText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TPIndicatorText.TextSize = 14
+
+-- Обновление индикатора
+RunService.Heartbeat:Connect(function()
+    TPIndicator.Visible = tpClickEnabled
+    if tpClickEnabled then
+        local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+        if isMobile then
+            TPIndicatorText.Text = "📍 Tap to Teleport"
+        else
+            TPIndicatorText.Text = "📍 Ctrl + Click to TP"
+        end
+    end
+end)
+
+-- ==================== ОБНОВЛЕНИЕ КОМАНД ====================
+-- Добавляем новые команды в список
+table.insert(commands, {name = "invis", desc = "Makes you invisible"})
+table.insert(commands, {name = "vis", desc = "Makes you visible"})
+table.insert(commands, {name = "speed [number]", desc = "Changes walk speed (16-500)"})
+table.insert(commands, {name = "unspeed", desc = "Resets speed to normal"})
+table.insert(commands, {name = "tpclick", desc = "Teleport by clicking/tapping"})
+table.insert(commands, {name = "untpclick", desc = "Disables teleport click"})
+
+-- Обновляем ScrollFrame с новыми командами
+local function UpdateCommandList()
+    for _, child in pairs(ScrollFrame:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+    
+    for _, cmd in ipairs(commands) do
+        local CmdFrame = Instance.new("Frame")
+        CmdFrame.Parent = ScrollFrame
+        CmdFrame.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
+        CmdFrame.BorderSizePixel = 0
+        CmdFrame.Size = UDim2.new(1, 0, 0, 50)
+        
+        local CmdFrameCorner = Instance.new("UICorner")
+        CmdFrameCorner.CornerRadius = UDim.new(0, 3)
+        CmdFrameCorner.Parent = CmdFrame
+        
+        local CmdName = Instance.new("TextLabel")
+        CmdName.Parent = CmdFrame
+        CmdName.BackgroundTransparency = 1
+        CmdName.Position = UDim2.new(0, 10, 0, 5)
+        CmdName.Size = UDim2.new(1, -20, 0, 20)
+        CmdName.Font = Enum.Font.Code
+        CmdName.Text = cmd.name
+        CmdName.TextColor3 = Color3.fromRGB(255, 255, 255)
+        CmdName.TextSize = 14
+        CmdName.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local CmdDesc = Instance.new("TextLabel")
+        CmdDesc.Parent = CmdFrame
+        CmdDesc.BackgroundTransparency = 1
+        CmdDesc.Position = UDim2.new(0, 10, 0, 25)
+        CmdDesc.Size = UDim2.new(1, -20, 0, 20)
+        CmdDesc.Font = Enum.Font.Code
+        CmdDesc.Text = cmd.desc
+        CmdDesc.TextColor3 = Color3.fromRGB(150, 150, 150)
+        CmdDesc.TextSize = 12
+        CmdDesc.TextXAlignment = Enum.TextXAlignment.Left
+    end
+    
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+end
+
+UpdateCommandList()
+
+-- ==================== ОБНОВЛЕНИЕ ОБРАБОТЧИКА КОМАНД ====================
+local originalExecuteCommand = ExecuteCommand
+
+function ExecuteCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    -- Новые команды
+    if command == "invis" then
+        EnableInvisibility()
+        
+    elseif command == "vis" then
+        DisableInvisibility()
+        
+    elseif command == "speed" then
+        local speed = tonumber(args[2]) or 50
+        SetSpeed(speed)
+        
+    elseif command == "unspeed" then
+        ResetSpeed()
+        
+    elseif command == "tpclick" then
+        EnableTPClick()
+        
+    elseif command == "untpclick" then
+        DisableTPClick()
+        
+    else
+        -- Старые команды
+        originalExecuteCommand(cmd)
+    end
+end
+
+-- ==================== ОБНОВЛЕНИЕ ПРИ РЕСПАВНЕ ====================
+local originalCharacterAdded = LocalPlayer.CharacterAdded:Connect(function() end)
+originalCharacterAdded:Disconnect()
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    RootPart = char:WaitForChild("HumanoidRootPart")
+    
+    -- Сброс всех эффектов
+    StopFly()
+    StopNoclip()
+    DisableGod()
+    DisableInvisibility()
+    ResetSpeed()
+    DisableTPClick()
+    
+    originalTransparency = {}
+    isInvisible = false
+    speedEnabled = false
+    tpClickEnabled = false
+    
+    -- Восстанавливаем скорость если была включена
+    task.wait(0.5)
+    if speedEnabled then
+        SetSpeed(speedValue)
+    end
+end)
+
+-- ==================== ANTI-CHEAT BYPASS (для невидимости) ====================
+-- Некоторые игры детектят невидимость, этот код обходит простую проверку
+RunService.Heartbeat:Connect(function()
+    if isInvisible and Character then
+        -- Периодически обновляем невидимость
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                if part.Transparency ~= 1 then
+                    part.Transparency = 1
+                end
+            end
+        end
+    end
+end)
+
+-- ==================== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ====================
+
+-- Автоматическое применение god mode при получении урона
+if godMode then
+    local dmgConnection
+    dmgConnection = Humanoid.HealthChanged:Connect(function(health)
+        if godMode and health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
+        end
+    end)
+end
+
+-- Визуальный фидбек для скорости
+local SpeedIndicator = Instance.new("TextLabel")
+SpeedIndicator.Parent = ScreenGui
+SpeedIndicator.BackgroundTransparency = 1
+SpeedIndicator.Position = UDim2.new(0, 10, 1, -50)
+SpeedIndicator.Size = UDim2.new(0, 150, 0, 30)
+SpeedIndicator.Font = Enum.Font.Code
+SpeedIndicator.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedIndicator.TextSize = 14
+SpeedIndicator.TextXAlignment = Enum.TextXAlignment.Left
+SpeedIndicator.TextStrokeTransparency = 0
+SpeedIndicator.Visible = false
+
+RunService.Heartbeat:Connect(function()
+    if speedEnabled and Humanoid then
+        SpeedIndicator.Visible = true
+        SpeedIndicator.Text = "🏃 Speed: " .. math.floor(Humanoid.WalkSpeed)
+    else
+        SpeedIndicator.Visible = false
+    end
+end)
+
+-- Визуальный фидбек для невидимости
+local InvisIndicator = Instance.new("TextLabel")
+InvisIndicator.Parent = ScreenGui
+InvisIndicator.BackgroundTransparency = 1
+InvisIndicator.Position = UDim2.new(0, 10, 1, -80)
+InvisIndicator.Size = UDim2.new(0, 150, 0, 30)
+InvisIndicator.Font = Enum.Font.Code
+InvisIndicator.Text = "👻 Invisible"
+InvisIndicator.TextColor3 = Color3.fromRGB(150, 150, 255)
+InvisIndicator.TextSize = 14
+InvisIndicator.TextXAlignment = Enum.TextXAlignment.Left
+InvisIndicator.TextStrokeTransparency = 0
+InvisIndicator.Visible = false
+
+RunService.Heartbeat:Connect(function()
+    InvisIndicator.Visible = isInvisible
+end)
+
+print("[IY] Extended functions loaded")
+print("[IY] New commands: invis, vis, speed [num], unspeed, tpclick, untpclick")
