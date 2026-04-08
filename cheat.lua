@@ -1,544 +1,428 @@
--- Проверка ключа
-local ADMIN_KEY = "adminkey"
-local hasAccess = false
+--[[
+    Hitbox Expander Script
+    Совместим с мобильными устройствами
+]]
 
--- Функция для создания окна ввода ключа
-local function createKeySystem()
-    local ScreenGui = Instance.new("ScreenGui")
-    local Frame = Instance.new("Frame")
-    local UICorner = Instance.new("UICorner")
-    local Title = Instance.new("TextLabel")
-    local KeyBox = Instance.new("TextBox")
-    local UICorner2 = Instance.new("UICorner")
-    local SubmitButton = Instance.new("TextButton")
-    local UICorner3 = Instance.new("UICorner")
-    local UIGradient = Instance.new("UIGradient")
-    
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.Name = "KeySystem"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    Frame.Parent = ScreenGui
-    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    Frame.BorderSizePixel = 0
-    Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-    Frame.Size = UDim2.new(0, 300, 0, 200)
-    Frame.Active = true
-    Frame.Draggable = true
-    
-    UICorner.CornerRadius = UDim.new(0, 15)
-    UICorner.Parent = Frame
-    
-    Title.Parent = Frame
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 0, 0, 10)
-    Title.Size = UDim2.new(1, 0, 0, 40)
-    Title.Font = Enum.Font.GothamBold
-    Title.Text = "🔐 Введите ключ"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 20
-    
-    KeyBox.Parent = Frame
-    KeyBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    KeyBox.BorderSizePixel = 0
-    KeyBox.Position = UDim2.new(0.5, -120, 0.5, -15)
-    KeyBox.Size = UDim2.new(0, 240, 0, 40)
-    KeyBox.Font = Enum.Font.Gotham
-    KeyBox.PlaceholderText = "Введите ключ..."
-    KeyBox.Text = ""
-    KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KeyBox.TextSize = 14
-    KeyBox.ClearTextOnFocus = false
-    
-    UICorner2.CornerRadius = UDim.new(0, 8)
-    UICorner2.Parent = KeyBox
-    
-    SubmitButton.Parent = Frame
-    SubmitButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    SubmitButton.BorderSizePixel = 0
-    SubmitButton.Position = UDim2.new(0.5, -80, 0.5, 40)
-    SubmitButton.Size = UDim2.new(0, 160, 0, 40)
-    SubmitButton.Font = Enum.Font.GothamBold
-    SubmitButton.Text = "✓ Войти"
-    SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SubmitButton.TextSize = 16
-    
-    UICorner3.CornerRadius = UDim.new(0, 10)
-    UICorner3.Parent = SubmitButton
-    
-    UIGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(115, 125, 255))
-    }
-    UIGradient.Rotation = 45
-    UIGradient.Parent = SubmitButton
-    
-    -- Анимация кнопки
-    SubmitButton.MouseEnter:Connect(function()
-        game:GetService("TweenService"):Create(SubmitButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 170, 0, 45)}):Play()
-    end)
-    
-    SubmitButton.MouseLeave:Connect(function()
-        game:GetService("TweenService"):Create(SubmitButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 160, 0, 40)}):Play()
-    end)
-    
-    SubmitButton.MouseButton1Click:Connect(function()
-        if KeyBox.Text == ADMIN_KEY then
-            hasAccess = true
-            game:GetService("TweenService"):Create(Frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -150, -0.5, 0)}):Play()
-            wait(0.4)
-            ScreenGui:Destroy()
-            createMainGUI()
-        else
-            KeyBox.Text = ""
-            KeyBox.PlaceholderText = "❌ Неверный ключ!"
-            wait(1)
-            KeyBox.PlaceholderText = "Введите ключ..."
-        end
-    end)
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Настройки
+local Settings = {
+    Enabled = false,
+    HitboxSize = 15,
+    Transparency = 0.7,
+    ShowBox = true,
+    TeamCheck = true,
+    Color = Color3.fromRGB(255, 0, 0)
+}
+
+-- Создание GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HitboxExpanderGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Проверка на мобильное устройство
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+if isMobile then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+else
+    ScreenGui.Parent = game:GetService("CoreGui")
 end
 
--- Основной GUI
-function createMainGUI()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
+-- Главное окно
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 320, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Закругление углов
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+-- Тень
+local Shadow = Instance.new("ImageLabel")
+Shadow.Name = "Shadow"
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.5
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+Shadow.Parent = MainFrame
+
+-- Заголовок
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 50)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+-- Фикс для нижних углов заголовка
+local TitleFix = Instance.new("Frame")
+TitleFix.Size = UDim2.new(1, 0, 0, 12)
+TitleFix.Position = UDim2.new(0, 0, 1, -12)
+TitleFix.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+TitleFix.BorderSizePixel = 0
+TitleFix.Parent = TitleBar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "🎯 Hitbox Expander"
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+-- Кнопка закрытия
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 40, 0, 40)
+CloseButton.Position = UDim2.new(1, -45, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+CloseButton.Text = "✕"
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 20
+CloseButton.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+-- Контейнер для элементов
+local Container = Instance.new("ScrollingFrame")
+Container.Name = "Container"
+Container.Size = UDim2.new(1, -20, 1, -70)
+Container.Position = UDim2.new(0, 10, 0, 60)
+Container.BackgroundTransparency = 1
+Container.BorderSizePixel = 0
+Container.ScrollBarThickness = 4
+Container.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 105)
+Container.CanvasSize = UDim2.new(0, 0, 0, 0)
+Container.Parent = MainFrame
+
+local ContainerList = Instance.new("UIListLayout")
+ContainerList.Padding = UDim.new(0, 10)
+ContainerList.SortOrder = Enum.SortOrder.LayoutOrder
+ContainerList.Parent = Container
+
+-- Функция создания переключателя
+local function CreateToggle(name, defaultValue, callback)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Name = name.."Toggle"
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 45)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Parent = Container
     
-    -- Настройки
-    local Settings = {
-        SilentAim = {
-            Enabled = false,
-            HitboxSize = 10,
-            FOV = 100,
-            ShowFOV = true,
-            TeamCheck = true,
-            WallCheck = false
-        },
-        Chams = {
-            Enabled = false,
-            Color = Color3.fromRGB(255, 0, 255),
-            Transparency = 0.5,
-            TeamCheck = true
-        }
-    }
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 8)
+    ToggleCorner.Parent = ToggleFrame
     
-    -- GUI элементы
-    local ScreenGui = Instance.new("ScreenGui")
-    local MainFrame = Instance.new("Frame")
-    local UICorner = Instance.new("UICorner")
-    local TopBar = Instance.new("Frame")
-    local UICorner2 = Instance.new("UICorner")
-    local Title = Instance.new("TextLabel")
-    local MinimizeButton = Instance.new("TextButton")
-    local UICorner3 = Instance.new("UICorner")
-    local ContentFrame = Instance.new("Frame")
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
+    ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Text = name
+    ToggleLabel.Font = Enum.Font.Gotham
+    ToggleLabel.TextColor3 = Color3.fromRGB(200, 200, 205)
+    ToggleLabel.TextSize = 14
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleLabel.Parent = ToggleFrame
     
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.Name = "SilentAimGUI"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Size = UDim2.new(0, 50, 0, 25)
+    ToggleButton.Position = UDim2.new(1, -60, 0.5, -12.5)
+    ToggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+    ToggleButton.Text = ""
+    ToggleButton.Parent = ToggleFrame
     
-    -- Главная рамка
-    MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
-    MainFrame.Size = UDim2.new(0, 500, 0, 400)
-    MainFrame.ClipsDescendants = true
+    local ToggleBtnCorner = Instance.new("UICorner")
+    ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
+    ToggleBtnCorner.Parent = ToggleButton
     
-    UICorner.CornerRadius = UDim.new(0, 15)
-    UICorner.Parent = MainFrame
+    local ToggleCircle = Instance.new("Frame")
+    ToggleCircle.Size = UDim2.new(0, 19, 0, 19)
+    ToggleCircle.Position = defaultValue and UDim2.new(1, -22, 0.5, -9.5) or UDim2.new(0, 3, 0.5, -9.5)
+    ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleCircle.BorderSizePixel = 0
+    ToggleCircle.Parent = ToggleButton
     
-    -- Верхняя панель
-    TopBar.Parent = MainFrame
-    TopBar.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    TopBar.BorderSizePixel = 0
-    TopBar.Size = UDim2.new(1, 0, 0, 50)
-    TopBar.Active = true
+    local CircleCorner = Instance.new("UICorner")
+    CircleCorner.CornerRadius = UDim.new(1, 0)
+    CircleCorner.Parent = ToggleCircle
     
-    UICorner2.CornerRadius = UDim.new(0, 15)
-    UICorner2.Parent = TopBar
+    local toggled = defaultValue
     
-    -- Делаем перетаскиваемым
-    local dragging, dragInput, dragStart, startPos
-    
-    TopBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
+    ToggleButton.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        callback(toggled)
+        
+        local colorTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = toggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+        })
+        
+        local positionTween = TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {
+            Position = toggled and UDim2.new(1, -22, 0.5, -9.5) or UDim2.new(0, 3, 0.5, -9.5)
+        })
+        
+        colorTween:Play()
+        positionTween:Play()
     end)
     
-    TopBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
+    return ToggleButton
+end
+
+-- Функция создания слайдера
+local function CreateSlider(name, min, max, defaultValue, callback)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Name = name.."Slider"
+    SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    SliderFrame.BorderSizePixel = 0
+    SliderFrame.Parent = Container
+    
+    local SliderCorner = Instance.new("UICorner")
+    SliderCorner.CornerRadius = UDim.new(0, 8)
+    SliderCorner.Parent = SliderFrame
+    
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Size = UDim2.new(1, -30, 0, 20)
+    SliderLabel.Position = UDim2.new(0, 15, 0, 8)
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Text = name
+    SliderLabel.Font = Enum.Font.Gotham
+    SliderLabel.TextColor3 = Color3.fromRGB(200, 200, 205)
+    SliderLabel.TextSize = 14
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SliderLabel.Parent = SliderFrame
+    
+    local SliderValue = Instance.new("TextLabel")
+    SliderValue.Size = UDim2.new(0, 50, 0, 20)
+    SliderValue.Position = UDim2.new(1, -65, 0, 8)
+    SliderValue.BackgroundTransparency = 1
+    SliderValue.Text = tostring(defaultValue)
+    SliderValue.Font = Enum.Font.GothamBold
+    SliderValue.TextColor3 = Color3.fromRGB(0, 200, 100)
+    SliderValue.TextSize = 14
+    SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+    SliderValue.Parent = SliderFrame
+    
+    local SliderBar = Instance.new("Frame")
+    SliderBar.Size = UDim2.new(1, -30, 0, 6)
+    SliderBar.Position = UDim2.new(0, 15, 1, -18)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    SliderBar.BorderSizePixel = 0
+    SliderBar.Parent = SliderFrame
+    
+    local BarCorner = Instance.new("UICorner")
+    BarCorner.CornerRadius = UDim.new(1, 0)
+    BarCorner.Parent = SliderBar
+    
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
+    SliderFill.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderBar
+    
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = SliderFill
+    
+    local SliderButton = Instance.new("TextButton")
+    SliderButton.Size = UDim2.new(1, 0, 1, 0)
+    SliderButton.BackgroundTransparency = 1
+    SliderButton.Text = ""
+    SliderButton.Parent = SliderBar
+    
+    local dragging = false
+    
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        local value = math.floor(min + (max - min) * pos)
+        
+        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        SliderValue.Text = tostring(value)
+        callback(value)
+    end
+    
+    SliderButton.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
         end
     end)
     
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            TweenService:Create(MainFrame, TweenInfo.new(0.1), {
-                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            }):Play()
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateSlider(input)
         end
     end)
     
-    Title.Parent = TopBar
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 15, 0, 0)
-    Title.Size = UDim2.new(0.7, 0, 1, 0)
-    Title.Font = Enum.Font.GothamBold
-    Title.Text = "🎯 Silent Aim & Chams"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 18
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    
-    MinimizeButton.Parent = TopBar
-    MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 95, 95)
-    MinimizeButton.Position = UDim2.new(1, -40, 0.5, -15)
-    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
-    MinimizeButton.Font = Enum.Font.GothamBold
-    MinimizeButton.Text = "−"
-    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinimizeButton.TextSize = 20
-    
-    UICorner3.CornerRadius = UDim.new(0, 8)
-    UICorner3.Parent = MinimizeButton
-    
-    local isMinimized = false
-    MinimizeButton.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        if isMinimized then
-            TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 500, 0, 50)}):Play()
-            MinimizeButton.Text = "+"
-        else
-            TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 500, 0, 400)}):Play()
-            MinimizeButton.Text = "−"
-        end
+    SliderButton.MouseButton1Click:Connect(function(x, y)
+        updateSlider({Position = Vector2.new(x, y)})
     end)
     
-    -- Контент
-    ContentFrame.Parent = MainFrame
-    ContentFrame.BackgroundTransparency = 1
-    ContentFrame.Position = UDim2.new(0, 20, 0, 70)
-    ContentFrame.Size = UDim2.new(1, -40, 1, -90)
-    
-    -- Функция создания переключателя
-    local function createToggle(name, parent, position, callback)
-        local ToggleFrame = Instance.new("Frame")
-        local ToggleLabel = Instance.new("TextLabel")
-        local ToggleButton = Instance.new("TextButton")
-        local ToggleCorner = Instance.new("UICorner")
-        local ToggleIndicator = Instance.new("Frame")
-        local IndicatorCorner = Instance.new("UICorner")
-        
-        ToggleFrame.Parent = parent
-        ToggleFrame.BackgroundTransparency = 1
-        ToggleFrame.Position = position
-        ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
-        
-        ToggleLabel.Parent = ToggleFrame
-        ToggleLabel.BackgroundTransparency = 1
-        ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
-        ToggleLabel.Font = Enum.Font.Gotham
-        ToggleLabel.Text = name
-        ToggleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-        ToggleLabel.TextSize = 14
-        ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-        
-        ToggleButton.Parent = ToggleFrame
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        ToggleButton.Position = UDim2.new(1, -60, 0.5, -15)
-        ToggleButton.Size = UDim2.new(0, 60, 0, 30)
-        ToggleButton.Text = ""
-        
-        ToggleCorner.CornerRadius = UDim.new(1, 0)
-        ToggleCorner.Parent = ToggleButton
-        
-        ToggleIndicator.Parent = ToggleButton
-        ToggleIndicator.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-        ToggleIndicator.Position = UDim2.new(0, 3, 0.5, -12)
-        ToggleIndicator.Size = UDim2.new(0, 24, 0, 24)
-        
-        IndicatorCorner.CornerRadius = UDim.new(1, 0)
-        IndicatorCorner.Parent = ToggleIndicator
-        
-        local enabled = false
-        ToggleButton.MouseButton1Click:Connect(function()
-            enabled = not enabled
-            callback(enabled)
-            
-            if enabled then
-                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {
-                    Position = UDim2.new(1, -27, 0.5, -12),
-                    BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-                }):Play()
-                TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(60, 70, 150)
-                }):Play()
-            else
-                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {
-                    Position = UDim2.new(0, 3, 0.5, -12),
-                    BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-                }):Play()
-                TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                }):Play()
-            end
-        end)
-        
-        return ToggleFrame
-    end
-    
-    -- Функция создания слайдера
-    local function createSlider(name, parent, position, min, max, default, callback)
-        local SliderFrame = Instance.new("Frame")
-        local SliderLabel = Instance.new("TextLabel")
-        local SliderValue = Instance.new("TextLabel")
-        local SliderBack = Instance.new("Frame")
-        local SliderCorner = Instance.new("UICorner")
-        local SliderFill = Instance.new("Frame")
-        local FillCorner = Instance.new("UICorner")
-        local SliderButton = Instance.new("TextButton")
-        
-        SliderFrame.Parent = parent
-        SliderFrame.BackgroundTransparency = 1
-        SliderFrame.Position = position
-        SliderFrame.Size = UDim2.new(1, 0, 0, 50)
-        
-        SliderLabel.Parent = SliderFrame
-        SliderLabel.BackgroundTransparency = 1
-        SliderLabel.Size = UDim2.new(0.5, 0, 0, 20)
-        SliderLabel.Font = Enum.Font.Gotham
-        SliderLabel.Text = name
-        SliderLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-        SliderLabel.TextSize = 14
-        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-        
-        SliderValue.Parent = SliderFrame
-        SliderValue.BackgroundTransparency = 1
-        SliderValue.Position = UDim2.new(0.5, 0, 0, 0)
-        SliderValue.Size = UDim2.new(0.5, 0, 0, 20)
-        SliderValue.Font = Enum.Font.GothamBold
-        SliderValue.Text = tostring(default)
-        SliderValue.TextColor3 = Color3.fromRGB(88, 101, 242)
-        SliderValue.TextSize = 14
-        SliderValue.TextXAlignment = Enum.TextXAlignment.Right
-        
-        SliderBack.Parent = SliderFrame
-        SliderBack.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        SliderBack.Position = UDim2.new(0, 0, 0, 30)
-        SliderBack.Size = UDim2.new(1, 0, 0, 8)
-        
-        SliderCorner.CornerRadius = UDim.new(1, 0)
-        SliderCorner.Parent = SliderBack
-        
-        SliderFill.Parent = SliderBack
-        SliderFill.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-        SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-        
-        FillCorner.CornerRadius = UDim.new(1, 0)
-        FillCorner.Parent = SliderFill
-        
-        SliderButton.Parent = SliderBack
-        SliderButton.BackgroundTransparency = 1
-        SliderButton.Size = UDim2.new(1, 0, 1, 0)
-        SliderButton.Text = ""
-        
-        local dragging = false
-        SliderButton.MouseButton1Down:Connect(function()
-            dragging = true
-        end)
-        
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
-        end)
-        
-        SliderButton.MouseMoved:Connect(function(x)
-            if dragging then
-                local sizeX = math.clamp((x - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
-                local value = math.floor(min + (max - min) * sizeX)
-                
-                SliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
-                SliderValue.Text = tostring(value)
-                callback(value)
-            end
-        end)
-        
-        return SliderFrame
-    end
-    
-    -- Создание UI элементов
-    local yPos = 0
-    
-    -- Silent Aim секция
-    local SilentAimTitle = Instance.new("TextLabel")
-    SilentAimTitle.Parent = ContentFrame
-    SilentAimTitle.BackgroundTransparency = 1
-    SilentAimTitle.Position = UDim2.new(0, 0, 0, yPos)
-    SilentAimTitle.Size = UDim2.new(1, 0, 0, 30)
-    SilentAimTitle.Font = Enum.Font.GothamBold
-    SilentAimTitle.Text = "🎯 Silent Aim"
-    SilentAimTitle.TextColor3 = Color3.fromRGB(88, 101, 242)
-    SilentAimTitle.TextSize = 16
-    SilentAimTitle.TextXAlignment = Enum.TextXAlignment.Left
-    yPos = yPos + 35
-    
-    createToggle("Включить Silent Aim", ContentFrame, UDim2.new(0, 0, 0, yPos), function(enabled)
-        Settings.SilentAim.Enabled = enabled
-    end)
-    yPos = yPos + 45
-    
-    createSlider("Размер хитбокса", ContentFrame, UDim2.new(0, 0, 0, yPos), 1, 50, 10, function(value)
-        Settings.SilentAim.HitboxSize = value
-    end)
-    yPos = yPos + 55
-    
-    createSlider("FOV", ContentFrame, UDim2.new(0, 0, 0, yPos), 10, 500, 100, function(value)
-        Settings.SilentAim.FOV = value
-    end)
-    yPos = yPos + 55
-    
-    -- Chams секция
-    local ChamsTitle = Instance.new("TextLabel")
-    ChamsTitle.Parent = ContentFrame
-    ChamsTitle.BackgroundTransparency = 1
-    ChamsTitle.Position = UDim2.new(0, 0, 0, yPos)
-    ChamsTitle.Size = UDim2.new(1, 0, 0, 30)
-    ChamsTitle.Font = Enum.Font.GothamBold
-    ChamsTitle.Text = "👁️ Chams (ESP)"
-    ChamsTitle.TextColor3 = Color3.fromRGB(88, 101, 242)
-    ChamsTitle.TextSize = 16
-    ChamsTitle.TextXAlignment = Enum.TextXAlignment.Left
-    yPos = yPos + 35
-    
-    createToggle("Включить Chams", ContentFrame, UDim2.new(0, 0, 0, yPos), function(enabled)
-        Settings.Chams.Enabled = enabled
-    end)
-    
-    -- Silent Aim функционал
-    local FOVCircle = Drawing.new("Circle")
-    FOVCircle.Thickness = 2
-    FOVCircle.NumSides = 50
-    FOVCircle.Radius = Settings.SilentAim.FOV
-    FOVCircle.Filled = false
-    FOVCircle.Visible = Settings.SilentAim.ShowFOV
-    FOVCircle.Color = Color3.fromRGB(88, 101, 242)
-    FOVCircle.Transparency = 1
-    
-    local function getClosestPlayer()
-        local closestPlayer = nil
-        local shortestDistance = math.huge
-        local camera = workspace.CurrentCamera
-        local localPlayer = Players.LocalPlayer
-        
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local character = player.Character
-                local hrp = character.HumanoidRootPart
-                local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-                
-                if onScreen then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                    
-                    if distance < Settings.SilentAim.FOV and distance < shortestDistance then
-                        closestPlayer = player
-                        shortestDistance = distance
-                    end
-                end
-            end
-        end
-        
-        return closestPlayer
-    end
-    
-    -- Хук на стрельбу
-    local oldNamecall
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local args = {...}
-        local method = getnamecallmethod()
-        
-        if Settings.SilentAim.Enabled and method == "FireServer" and tostring(self) == "RemoteEvent" then
-            local target = getClosestPlayer()
-            if target and target.Character then
-                local head = target.Character:FindFirstChild("Head")
-                if head then
-                    args[2] = head.Position
-                end
-            end
-        end
-        
-        return oldNamecall(self, unpack(args))
-    end)
-    
-    -- Chams функционал
-    local function addChams(character)
-        if not Settings.Chams.Enabled then return end
-        
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "Cham"
-                highlight.FillColor = Settings.Chams.Color
-                highlight.FillTransparency = Settings.Chams.Transparency
-                highlight.OutlineTransparency = 1
-                highlight.Parent = part
-            end
-        end
-    end
-    
-    local function removeChams(character)
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("Highlight") and part.Name == "Cham" then
-                part:Destroy()
-            end
-        end
-    end
-    
-    -- Применение chams ко всем игрокам
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= Players.LocalPlayer and player.Character then
-            addChams(player.Character)
-        end
-        
-        player.CharacterAdded:Connect(function(character)
-            wait(0.5)
-            if Settings.Chams.Enabled then
-                addChams(character)
-            end
-        end)
-    end
-    
-    Players.PlayerAdded:Connect(function(player)
-        player.CharacterAdded:Connect(function(character)
-            wait(0.5)
-            if Settings.Chams.Enabled then
-                addChams(character)
-            end
-        end)
-    end)
-    
-    -- Обновление FOV круга
-    RunService.RenderStepped:Connect(function()
-        local mousePos = UserInputService:GetMouseLocation()
-        FOVCircle.Position = mousePos
-        FOVCircle.Radius = Settings.SilentAim.FOV
-        FOVCircle.Visible = Settings.SilentAim.Enabled and Settings.SilentAim.ShowFOV
-    end)
-    
-    print("✅ Silent Aim & Chams загружен!")
+    return SliderFrame
 end
 
--- Запуск
-createKeySystem()
+-- Создание элементов управления
+CreateToggle("Включить Hitbox", Settings.Enabled, function(value)
+    Settings.Enabled = value
+end)
+
+CreateToggle("Показать квадрат", Settings.ShowBox, function(value)
+    Settings.ShowBox = value
+end)
+
+CreateToggle("Проверка команды", Settings.TeamCheck, function(value)
+    Settings.TeamCheck = value
+end)
+
+CreateSlider("Размер хитбокса", 5, 50, Settings.HitboxSize, function(value)
+    Settings.HitboxSize = value
+end)
+
+CreateSlider("Прозрачность", 0, 100, Settings.Transparency * 100, function(value)
+    Settings.Transparency = value / 100
+end)
+
+-- Обновление размера canvas
+ContainerList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Container.CanvasSize = UDim2.new(0, 0, 0, ContainerList.AbsoluteContentSize.Y + 10)
+end)
+
+-- Кнопка закрытия
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Хранилище оригинальных размеров
+local OriginalSizes = {}
+local HitboxParts = {}
+
+-- Функция применения хитбокса
+local function ApplyHitbox(character)
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    -- Сохраняем оригинальный размер
+    if not OriginalSizes[character] then
+        OriginalSizes[character] = humanoidRootPart.Size
+    end
+    
+    -- Расширяем хитбокс
+    if Settings.Enabled then
+        humanoidRootPart.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+        humanoidRootPart.Transparency = 1
+        humanoidRootPart.CanCollide = false
+        
+        -- Создаем визуальный куб
+        if Settings.ShowBox and not HitboxParts[character] then
+            local part = Instance.new("Part")
+            part.Name = "HitboxVisual"
+            part.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+            part.Transparency = Settings.Transparency
+            part.Color = Settings.Color
+            part.Material = Enum.Material.Neon
+            part.CanCollide = false
+            part.Anchored = false
+            part.Parent = character
+            
+            local weld = Instance.new("WeldConstraint")
+            weld.Part0 = humanoidRootPart
+            weld.Part1 = part
+            weld.Parent = part
+            
+            HitboxParts[character] = part
+        elseif HitboxParts[character] then
+            HitboxParts[character].Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+            HitboxParts[character].Transparency = Settings.Transparency
+            HitboxParts[character].Visible = Settings.ShowBox
+        end
+    else
+        -- Восстанавливаем оригинальный размер
+        if OriginalSizes[character] then
+            humanoidRootPart.Size = OriginalSizes[character]
+            humanoidRootPart.Transparency = 1
+            humanoidRootPart.CanCollide = false
+        end
+        
+        -- Удаляем визуальный куб
+        if HitboxParts[character] then
+            HitboxParts[character]:Destroy()
+            HitboxParts[character] = nil
+        end
+    end
+end
+
+-- Основной цикл
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if Settings.TeamCheck then
+                if player.Team ~= LocalPlayer.Team then
+                    ApplyHitbox(player.Character)
+                end
+            else
+                ApplyHitbox(player.Character)
+            end
+        end
+    end
+end)
+
+-- Обработка новых игроков
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        wait(1)
+        if Settings.TeamCheck then
+            if player.Team ~= LocalPlayer.Team then
+                ApplyHitbox(character)
+            end
+        else
+            ApplyHitbox(character)
+        end
+    end)
+end)
+
+-- Очистка при выходе
+Players.PlayerRemoving:Connect(function(player)
+    if player.Character then
+        OriginalSizes[player.Character] = nil
+        if HitboxParts[player.Character] then
+            HitboxParts[player.Character]:Destroy()
+            HitboxParts[player.Character] = nil
+        end
+    end
+end)
+
+print("✅ Hitbox Expander загружен!")
