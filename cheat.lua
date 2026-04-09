@@ -1,6 +1,6 @@
 --[[
     ⭐ STAR HITBOX HUB ⭐
-    Compact Mobile Version
+    Fixed Version
 ]]
 
 local Players = game:GetService("Players")
@@ -21,6 +21,7 @@ local Settings = {
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "StarHitboxHub"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 
 if UserInputService.TouchEnabled then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -31,7 +32,7 @@ else
 end
 
 -- ═══════════════════════════════════════
--- 🔘 КНОПКА ОТКРЫТИЯ/ЗАКРЫТИЯ
+-- 🔘 КНОПКА ОТКРЫТИЯ
 -- ═══════════════════════════════════════
 
 local OpenButton = Instance.new("TextButton")
@@ -63,8 +64,8 @@ OpenStroke.Parent = OpenButton
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 280, 0, 220)
-MainFrame.Position = UDim2.new(0.5, -140, 0.5, -110)
+MainFrame.Size = UDim2.new(0, 280, 0, 180)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
@@ -159,7 +160,7 @@ CircleCorner.CornerRadius = UDim.new(1, 0)
 CircleCorner.Parent = Circle
 
 -- ═══════════════════════════════════════
--- 👁️ ПОКАЗАТЬ ХИТБОКС
+-- 👁️ ПОКАЗАТЬ КВАДРАТ
 -- ═══════════════════════════════════════
 
 local ShowFrame = Instance.new("Frame")
@@ -208,68 +209,75 @@ ShowCircleCorner.CornerRadius = UDim.new(1, 0)
 ShowCircleCorner.Parent = ShowCircle
 
 -- ═══════════════════════════════════════
--- 📏 СЛАЙДЕР РАЗМЕРА
+-- 📏 РАЗМЕР С КНОПКАМИ +/-
 -- ═══════════════════════════════════════
 
-local SliderFrame = Instance.new("Frame")
-SliderFrame.Size = UDim2.new(1, -30, 0, 55)
-SliderFrame.Position = UDim2.new(0, 15, 0, 160)
-SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SliderFrame.BorderSizePixel = 0
-SliderFrame.Parent = MainFrame
+local SizeFrame = Instance.new("Frame")
+SizeFrame.Size = UDim2.new(1, -30, 0, 45)
+SizeFrame.Position = UDim2.new(0, 15, 1, -60)
+SizeFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SizeFrame.BorderSizePixel = 0
+SizeFrame.Parent = MainFrame
 
-local SliderCorner = Instance.new("UICorner")
-SliderCorner.CornerRadius = UDim.new(0, 8)
-SliderCorner.Parent = SliderFrame
+local SizeCorner = Instance.new("UICorner")
+SizeCorner.CornerRadius = UDim.new(0, 8)
+SizeCorner.Parent = SizeFrame
 
-local SliderLabel = Instance.new("TextLabel")
-SliderLabel.Size = UDim2.new(1, -60, 0, 20)
-SliderLabel.Position = UDim2.new(0, 15, 0, 8)
-SliderLabel.BackgroundTransparency = 1
-SliderLabel.Text = "📏 Размер"
-SliderLabel.Font = Enum.Font.Gotham
-SliderLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
-SliderLabel.TextSize = 15
-SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-SliderLabel.Parent = SliderFrame
+local SizeLabel = Instance.new("TextLabel")
+SizeLabel.Size = UDim2.new(0, 100, 1, 0)
+SizeLabel.Position = UDim2.new(0, 15, 0, 0)
+SizeLabel.BackgroundTransparency = 1
+SizeLabel.Text = "📏 Размер"
+SizeLabel.Font = Enum.Font.Gotham
+SizeLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+SizeLabel.TextSize = 15
+SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+SizeLabel.Parent = SizeFrame
 
 local ValueLabel = Instance.new("TextLabel")
-ValueLabel.Size = UDim2.new(0, 50, 0, 20)
-ValueLabel.Position = UDim2.new(1, -60, 0, 8)
-ValueLabel.BackgroundTransparency = 1
+ValueLabel.Size = UDim2.new(0, 50, 0, 30)
+ValueLabel.Position = UDim2.new(0.5, -25, 0.5, -15)
+ValueLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 ValueLabel.Text = tostring(Settings.Size)
 ValueLabel.Font = Enum.Font.GothamBold
 ValueLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
-ValueLabel.TextSize = 15
-ValueLabel.Parent = SliderFrame
+ValueLabel.TextSize = 16
+ValueLabel.BorderSizePixel = 0
+ValueLabel.Parent = SizeFrame
 
-local SliderBar = Instance.new("Frame")
-SliderBar.Size = UDim2.new(1, -30, 0, 6)
-SliderBar.Position = UDim2.new(0, 15, 1, -15)
-SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-SliderBar.BorderSizePixel = 0
-SliderBar.Parent = SliderFrame
+local ValueCorner = Instance.new("UICorner")
+ValueCorner.CornerRadius = UDim.new(0, 6)
+ValueCorner.Parent = ValueLabel
 
-local BarCorner = Instance.new("UICorner")
-BarCorner.CornerRadius = UDim.new(1, 0)
-BarCorner.Parent = SliderBar
+local MinusBtn = Instance.new("TextButton")
+MinusBtn.Size = UDim2.new(0, 35, 0, 30)
+MinusBtn.Position = UDim2.new(1, -90, 0.5, -15)
+MinusBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+MinusBtn.Text = "-"
+MinusBtn.TextSize = 20
+MinusBtn.Font = Enum.Font.GothamBold
+MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinusBtn.BorderSizePixel = 0
+MinusBtn.Parent = SizeFrame
 
-local Fill = Instance.new("Frame")
-Fill.Size = UDim2.new((Settings.Size - 5) / 45, 0, 1, 0)
-Fill.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
-Fill.BorderSizePixel = 0
-Fill.Parent = SliderBar
+local MinusCorner = Instance.new("UICorner")
+MinusCorner.CornerRadius = UDim.new(0, 6)
+MinusCorner.Parent = MinusBtn
 
-local FillCorner = Instance.new("UICorner")
-FillCorner.CornerRadius = UDim.new(1, 0)
-FillCorner.Parent = Fill
+local PlusBtn = Instance.new("TextButton")
+PlusBtn.Size = UDim2.new(0, 35, 0, 30)
+PlusBtn.Position = UDim2.new(1, -50, 0.5, -15)
+PlusBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+PlusBtn.Text = "+"
+PlusBtn.TextSize = 20
+PlusBtn.Font = Enum.Font.GothamBold
+PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlusBtn.BorderSizePixel = 0
+PlusBtn.Parent = SizeFrame
 
-local SliderBtn = Instance.new("TextButton")
-SliderBtn.Size = UDim2.new(1, 0, 1, 20)
-SliderBtn.Position = UDim2.new(0, 0, 0, -10)
-SliderBtn.BackgroundTransparency = 1
-SliderBtn.Text = ""
-SliderBtn.Parent = SliderBar
+local PlusCorner = Instance.new("UICorner")
+PlusCorner.CornerRadius = UDim.new(0, 6)
+PlusCorner.Parent = PlusBtn
 
 -- ═══════════════════════════════════════
 -- 🎮 ЛОГИКА КНОПОК
@@ -283,8 +291,8 @@ OpenButton.MouseButton1Click:Connect(function()
         MainFrame.Size = UDim2.new(0, 0, 0, 0)
         MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
         TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 280, 0, 220),
-            Position = UDim2.new(0.5, -140, 0.5, -110)
+            Size = UDim2.new(0, 280, 0, 180),
+            Position = UDim2.new(0.5, -140, 0.5, -90)
         }):Play()
     end
 end)
@@ -324,120 +332,133 @@ ShowBtn.MouseButton1Click:Connect(function()
     }):Play()
 end)
 
--- Слайдер
-local dragging = false
-
-local function updateSlider(input)
-    local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-    local value = math.floor(5 + 45 * pos)
-    
-    Settings.Size = value
-    Fill.Size = UDim2.new(pos, 0, 1, 0)
-    ValueLabel.Text = tostring(value)
-end
-
-SliderBtn.MouseButton1Down:Connect(function()
-    dragging = true
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
+-- Кнопки +/-
+MinusBtn.MouseButton1Click:Connect(function()
+    if Settings.Size > 5 then
+        Settings.Size = Settings.Size - 5
+        ValueLabel.Text = tostring(Settings.Size)
     end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        updateSlider(input)
+PlusBtn.MouseButton1Click:Connect(function()
+    if Settings.Size < 50 then
+        Settings.Size = Settings.Size + 5
+        ValueLabel.Text = tostring(Settings.Size)
     end
 end)
 
 -- ═══════════════════════════════════════
--- 💫 HITBOX СИСТЕМА
+-- 💫 HITBOX СИСТЕМА (ИСПРАВЛЕНА)
 -- ═══════════════════════════════════════
 
 local HitboxParts = {}
+local OriginalSizes = {}
 
-local function UpdateHitbox(character)
+local function IsEnemy(player)
+    if not LocalPlayer.Team then return true end
+    if not player.Team then return true end
+    return player.Team ~= LocalPlayer.Team
+end
+
+local function ApplyHitbox(player)
+    if not player or player == LocalPlayer then return end
+    if not IsEnemy(player) then return end
+    
+    local character = player.Character
     if not character then return end
     
     local hrp = character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     
-    -- Удаляем старый визуал
-    if HitboxParts[character] then
-        HitboxParts[character]:Destroy()
-        HitboxParts[character] = nil
+    -- Сохраняем оригинальный размер
+    if not OriginalSizes[player] then
+        OriginalSizes[player] = hrp.Size
     end
     
     if Settings.Enabled then
-        -- Увеличиваем хитбокс
+        -- Применяем хитбокс
         hrp.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
         hrp.Transparency = 1
         hrp.CanCollide = false
         hrp.Massless = true
         
-        -- Показываем визуал
+        -- Создаём/обновляем визуал
         if Settings.ShowBox then
-            local box = Instance.new("Part")
-            box.Name = "HitboxVis"
-            box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-            box.CFrame = hrp.CFrame
-            box.Transparency = 0.7
-            box.Color = Color3.fromRGB(255, 0, 0)
-            box.Material = Enum.Material.Neon
-            box.CanCollide = false
-            box.Anchored = false
-            box.Massless = true
-            box.Parent = character
-            
-            local weld = Instance.new("WeldConstraint")
-            weld.Part0 = hrp
-            weld.Part1 = box
-            weld.Parent = box
-            
-            HitboxParts[character] = box
+            if HitboxParts[player] and HitboxParts[player].Parent then
+                -- Обновляем существующий
+                local box = HitboxParts[player]
+                box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+            else
+                -- Создаём новый
+                local box = Instance.new("Part")
+                box.Name = "HitboxVisual"
+                box.Anchored = false
+                box.CanCollide = false
+                box.Transparency = 0.6
+                box.Material = Enum.Material.ForceField
+                box.Color = Color3.fromRGB(255, 0, 0)
+                box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+                box.CFrame = hrp.CFrame
+                box.Massless = true
+                
+                -- Добавляем SelectionBox для чёткого контура
+                local outline = Instance.new("SelectionBox")
+                outline.LineThickness = 0.05
+                outline.Color3 = Color3.fromRGB(255, 0, 0)
+                outline.Adornee = box
+                outline.Parent = box
+                
+                -- Видно через стены
+                box.CastShadow = false
+                for _, v in pairs(character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.LocalTransparencyModifier = 0
+                    end
+                end
+                
+                local weld = Instance.new("WeldConstraint")
+                weld.Part0 = hrp
+                weld.Part1 = box
+                weld.Parent = box
+                
+                box.Parent = character
+                HitboxParts[player] = box
+            end
+        else
+            -- Удаляем визуал
+            if HitboxParts[player] then
+                HitboxParts[player]:Destroy()
+                HitboxParts[player] = nil
+            end
         end
     else
-        -- Возвращаем стандартный размер
-        hrp.Size = Vector3.new(2, 2, 1)
-        hrp.Transparency = 1
+        -- Возвращаем оригинал
+        if OriginalSizes[player] then
+            hrp.Size = OriginalSizes[player]
+        end
+        
+        if HitboxParts[player] then
+            HitboxParts[player]:Destroy()
+            HitboxParts[player] = nil
+        end
     end
 end
 
--- Обновление хитбоксов
+-- Основной цикл
 RunService.Heartbeat:Connect(function()
-    if not Settings.Enabled then return end
-    
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            local character = player.Character
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp then
-                -- Обновляем размер
-                if hrp.Size ~= Vector3.new(Settings.Size, Settings.Size, Settings.Size) then
-                    hrp.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-                    hrp.Transparency = 1
-                    hrp.CanCollide = false
-                    hrp.Massless = true
+            if IsEnemy(player) then
+                ApplyHitbox(player)
+            else
+                -- Убираем хитбокс с тиммейтов
+                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp and OriginalSizes[player] then
+                    hrp.Size = OriginalSizes[player]
                 end
-                
-                -- Обновляем визуал
-                if Settings.ShowBox then
-                    if not HitboxParts[character] or not HitboxParts[character].Parent then
-                        UpdateHitbox(character)
-                    else
-                        local box = HitboxParts[character]
-                        if box.Size ~= Vector3.new(Settings.Size, Settings.Size, Settings.Size) then
-                            box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
-                        end
-                    end
-                else
-                    if HitboxParts[character] then
-                        HitboxParts[character]:Destroy()
-                        HitboxParts[character] = nil
-                    end
+                if HitboxParts[player] then
+                    HitboxParts[player]:Destroy()
+                    HitboxParts[player] = nil
                 end
             end
         end
@@ -447,26 +468,27 @@ end)
 -- Новые игроки
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
-        task.wait(1)
-        if Settings.Enabled then
-            UpdateHitbox(character)
+        task.wait(0.5)
+        if IsEnemy(player) then
+            ApplyHitbox(player)
         end
     end)
 end)
 
 -- Очистка
 Players.PlayerRemoving:Connect(function(player)
-    if player.Character and HitboxParts[player.Character] then
-        HitboxParts[player.Character]:Destroy()
-        HitboxParts[player.Character] = nil
+    OriginalSizes[player] = nil
+    if HitboxParts[player] then
+        HitboxParts[player]:Destroy()
+        HitboxParts[player] = nil
     end
 end)
 
 -- Уведомление
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "⭐ STAR HITBOX HUB";
-    Text = "Загружено! Нажми на звезду";
+    Text = "Загружено! Нажми ⭐";
     Duration = 3;
 })
 
-print("⭐ STAR HITBOX HUB загружен!")
+print("⭐ HITBOX HUB работает!")
