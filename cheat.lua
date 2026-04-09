@@ -398,3 +398,333 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
 })
 
 print("⭐ Hitbox Hub работает!")
+
+-- ═══════════════════════════════════════
+-- 👁️ ESP СИСТЕМА (2/2)
+-- ═══════════════════════════════════════
+
+local ESPSettings = {
+    Enabled = false,
+    CircleSize = 15
+}
+
+local AutoShotSettings = {
+    Enabled = false,
+    FOV = 200,
+    ShootDelay = 0.1
+}
+
+-- Добавляем кнопки в меню
+local ESPFrame = Instance.new("Frame")
+ESPFrame.Size = UDim2.new(1, -24, 0, 40)
+ESPFrame.Position = UDim2.new(0, 12, 1, 10)
+ESPFrame.BackgroundColor3 = Color3.fromRGB(250, 250, 255)
+ESPFrame.BorderSizePixel = 0
+ESPFrame.Parent = MainFrame
+
+local ESPCorner = Instance.new("UICorner")
+ESPCorner.CornerRadius = UDim.new(0, 6)
+ESPCorner.Parent = ESPFrame
+
+local ESPLabel = Instance.new("TextLabel")
+ESPLabel.Size = UDim2.new(1, -65, 1, 0)
+ESPLabel.Position = UDim2.new(0, 12, 0, 0)
+ESPLabel.BackgroundTransparency = 1
+ESPLabel.Text = "ESP (Кружок)"
+ESPLabel.Font = Enum.Font.Gotham
+ESPLabel.TextColor3 = Color3.fromRGB(80, 80, 90)
+ESPLabel.TextSize = 14
+ESPLabel.TextXAlignment = Enum.TextXAlignment.Left
+ESPLabel.Parent = ESPFrame
+
+local ESPBtn = Instance.new("TextButton")
+ESPBtn.Size = UDim2.new(0, 45, 0, 24)
+ESPBtn.Position = UDim2.new(1, -50, 0.5, -12)
+ESPBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+ESPBtn.Text = ""
+ESPBtn.BorderSizePixel = 0
+ESPBtn.Parent = ESPFrame
+
+local ESPBtnCorner = Instance.new("UICorner")
+ESPBtnCorner.CornerRadius = UDim.new(1, 0)
+ESPBtnCorner.Parent = ESPBtn
+
+local ESPCircle = Instance.new("Frame")
+ESPCircle.Size = UDim2.new(0, 18, 0, 18)
+ESPCircle.Position = UDim2.new(0, 3, 0.5, -9)
+ESPCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ESPCircle.BorderSizePixel = 0
+ESPCircle.Parent = ESPBtn
+
+local ESPCircleCorner = Instance.new("UICorner")
+ESPCircleCorner.CornerRadius = UDim.new(1, 0)
+ESPCircleCorner.Parent = ESPCircle
+
+-- AutoShot кнопка
+local AutoShotFrame = Instance.new("Frame")
+AutoShotFrame.Size = UDim2.new(1, -24, 0, 40)
+AutoShotFrame.Position = UDim2.new(0, 12, 1, 55)
+AutoShotFrame.BackgroundColor3 = Color3.fromRGB(250, 250, 255)
+AutoShotFrame.BorderSizePixel = 0
+AutoShotFrame.Parent = MainFrame
+
+local AutoShotCorner = Instance.new("UICorner")
+AutoShotCorner.CornerRadius = UDim.new(0, 6)
+AutoShotCorner.Parent = AutoShotFrame
+
+local AutoShotLabel = Instance.new("TextLabel")
+AutoShotLabel.Size = UDim2.new(1, -65, 1, 0)
+AutoShotLabel.Position = UDim2.new(0, 12, 0, 0)
+AutoShotLabel.BackgroundTransparency = 1
+AutoShotLabel.Text = "AutoShot"
+AutoShotLabel.Font = Enum.Font.Gotham
+AutoShotLabel.TextColor3 = Color3.fromRGB(80, 80, 90)
+AutoShotLabel.TextSize = 14
+AutoShotLabel.TextXAlignment = Enum.TextXAlignment.Left
+AutoShotLabel.Parent = AutoShotFrame
+
+local AutoShotBtn = Instance.new("TextButton")
+AutoShotBtn.Size = UDim2.new(0, 45, 0, 24)
+AutoShotBtn.Position = UDim2.new(1, -50, 0.5, -12)
+AutoShotBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+AutoShotBtn.Text = ""
+AutoShotBtn.BorderSizePixel = 0
+AutoShotBtn.Parent = AutoShotFrame
+
+local AutoShotBtnCorner = Instance.new("UICorner")
+AutoShotBtnCorner.CornerRadius = UDim.new(1, 0)
+AutoShotBtnCorner.Parent = AutoShotBtn
+
+local AutoShotCircle = Instance.new("Frame")
+AutoShotCircle.Size = UDim2.new(0, 18, 0, 18)
+AutoShotCircle.Position = UDim2.new(0, 3, 0.5, -9)
+AutoShotCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AutoShotCircle.BorderSizePixel = 0
+AutoShotCircle.Parent = AutoShotBtn
+
+local AutoShotCircleCorner = Instance.new("UICorner")
+AutoShotCircleCorner.CornerRadius = UDim.new(1, 0)
+AutoShotCircleCorner.Parent = AutoShotCircle
+
+-- Увеличиваем размер меню
+MainFrame.Size = UDim2.new(0, 260, 0, 230)
+
+-- Логика ESP кнопки
+ESPBtn.MouseButton1Click:Connect(function()
+    ESPSettings.Enabled = not ESPSettings.Enabled
+    
+    TweenService:Create(ESPBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = ESPSettings.Enabled and Color3.fromRGB(120, 220, 120) or Color3.fromRGB(200, 200, 210)
+    }):Play()
+    
+    TweenService:Create(ESPCircle, TweenInfo.new(0.2), {
+        Position = ESPSettings.Enabled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    }):Play()
+end)
+
+-- Логика AutoShot кнопки
+AutoShotBtn.MouseButton1Click:Connect(function()
+    AutoShotSettings.Enabled = not AutoShotSettings.Enabled
+    
+    TweenService:Create(AutoShotBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = AutoShotSettings.Enabled and Color3.fromRGB(120, 220, 120) or Color3.fromRGB(200, 200, 210)
+    }):Play()
+    
+    TweenService:Create(AutoShotCircle, TweenInfo.new(0.2), {
+        Position = AutoShotSettings.Enabled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    }):Play()
+end)
+
+-- ═══════════════════════════════════════
+-- 🔴 ESP КРАСНЫЙ КРУЖОК
+-- ═══════════════════════════════════════
+
+local ESPCache = {}
+local Camera = workspace.CurrentCamera
+
+local function CreateESP(player)
+    if ESPCache[player] then return end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    -- Создаём BillboardGui
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESP"
+    billboard.Adornee = hrp
+    billboard.Size = UDim2.new(0, ESPSettings.CircleSize * 2, 0, ESPSettings.CircleSize * 2)
+    billboard.StudsOffset = Vector3.new(0, 0, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = hrp
+    
+    -- Красный круг
+    local circle = Instance.new("ImageLabel")
+    circle.Size = UDim2.new(1, 0, 1, 0)
+    circle.BackgroundTransparency = 1
+    circle.Image = "rbxassetid://3570695787"
+    circle.ImageColor3 = Color3.fromRGB(255, 50, 50)
+    circle.ImageTransparency = 0.3
+    circle.Parent = billboard
+    
+    -- Обводка
+    local outline = Instance.new("ImageLabel")
+    outline.Size = UDim2.new(1.2, 0, 1.2, 0)
+    outline.Position = UDim2.new(0.5, 0, 0.5, 0)
+    outline.AnchorPoint = Vector2.new(0.5, 0.5)
+    outline.BackgroundTransparency = 1
+    outline.Image = "rbxassetid://3570695787"
+    outline.ImageColor3 = Color3.fromRGB(255, 0, 0)
+    outline.ImageTransparency = 0.1
+    outline.Parent = billboard
+    
+    -- Highlight через стены
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.fromRGB(255, 50, 50)
+    highlight.FillTransparency = 0.7
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+    
+    ESPCache[player] = {billboard = billboard, highlight = highlight}
+end
+
+local function RemoveESP(player)
+    if ESPCache[player] then
+        if ESPCache[player].billboard then
+            ESPCache[player].billboard:Destroy()
+        end
+        if ESPCache[player].highlight then
+            ESPCache[player].highlight:Destroy()
+        end
+        ESPCache[player] = nil
+    end
+end
+
+-- Обновление ESP
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsEnemy(player) and player.Character then
+            if ESPSettings.Enabled then
+                if not ESPCache[player] then
+                    CreateESP(player)
+                end
+            else
+                RemoveESP(player)
+            end
+        end
+    end
+end)
+
+-- Очистка ESP
+Players.PlayerRemoving:Connect(function(player)
+    RemoveESP(player)
+end)
+
+-- ═══════════════════════════════════════
+-- 🎯 AUTOSHOT СИСТЕМА
+-- ═══════════════════════════════════════
+
+local Mouse = LocalPlayer:GetMouse()
+local lastShot = 0
+
+local function GetClosestEnemy()
+    local closestPlayer = nil
+    local shortestDistance = AutoShotSettings.FOV
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsEnemy(player) and player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            local head = player.Character:FindFirstChild("Head")
+            
+            if hrp and head then
+                local screenPoint, onScreen = Camera:WorldToScreenPoint(head.Position)
+                
+                if onScreen then
+                    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+                    local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+                    
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+local function Shoot()
+    local currentTime = tick()
+    if currentTime - lastShot < AutoShotSettings.ShootDelay then
+        return
+    end
+    
+    -- Находим инструмент (оружие)
+    local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    
+    if tool then
+        -- Пытаемся выстрелить разными способами
+        pcall(function()
+            -- Метод 1: Mouse1Click
+            if tool:FindFirstChild("Fire") then
+                tool.Fire:FireServer()
+            end
+            
+            -- Метод 2: RemoteEvent
+            for _, v in pairs(tool:GetDescendants()) do
+                if v:IsA("RemoteEvent") and (v.Name == "Fire" or v.Name == "Shoot" or v.Name == "MouseClick") then
+                    v:FireServer()
+                end
+            end
+            
+            -- Метод 3: Активация
+            tool:Activate()
+        end)
+        
+        lastShot = currentTime
+    end
+end
+
+-- Основной цикл AutoShot
+RunService.Heartbeat:Connect(function()
+    if not AutoShotSettings.Enabled then return end
+    
+    local target = GetClosestEnemy()
+    if target and target.Character then
+        local head = target.Character:FindFirstChild("Head")
+        if head then
+            -- Наводим камеру
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+            
+            -- Стреляем
+            Shoot()
+        end
+    end
+end)
+
+-- FOV круг (визуализация)
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 2
+FOVCircle.NumSides = 50
+FOVCircle.Radius = AutoShotSettings.FOV
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Transparency = 0.5
+
+RunService.RenderStepped:Connect(function()
+    if AutoShotSettings.Enabled then
+        FOVCircle.Visible = true
+        FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
+        FOVCircle.Radius = AutoShotSettings.FOV
+    else
+        FOVCircle.Visible = false
+    end
+end)
+
+print("✅ ESP и AutoShot добавлены!")
