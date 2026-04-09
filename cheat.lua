@@ -1,428 +1,472 @@
 --[[
-    Hitbox Expander Script
-    Совместим с мобильными устройствами
+    ⭐ STAR HITBOX HUB ⭐
+    Compact Mobile Version
 ]]
 
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
 -- Настройки
 local Settings = {
     Enabled = false,
-    HitboxSize = 15,
-    Transparency = 0.7,
-    ShowBox = true,
-    TeamCheck = true,
-    Color = Color3.fromRGB(255, 0, 0)
+    Size = 20,
+    ShowBox = false
 }
 
 -- Создание GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HitboxExpanderGUI"
+ScreenGui.Name = "StarHitboxHub"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Проверка на мобильное устройство
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-
-if isMobile then
+if UserInputService.TouchEnabled then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 else
-    ScreenGui.Parent = game:GetService("CoreGui")
+    pcall(function()
+        ScreenGui.Parent = game:GetService("CoreGui")
+    end)
 end
 
--- Главное окно
+-- ═══════════════════════════════════════
+-- 🔘 КНОПКА ОТКРЫТИЯ/ЗАКРЫТИЯ
+-- ═══════════════════════════════════════
+
+local OpenButton = Instance.new("TextButton")
+OpenButton.Name = "OpenButton"
+OpenButton.Size = UDim2.new(0, 60, 0, 60)
+OpenButton.Position = UDim2.new(0, 10, 0.5, -30)
+OpenButton.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+OpenButton.Text = "⭐"
+OpenButton.TextSize = 30
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenButton.BorderSizePixel = 0
+OpenButton.Active = true
+OpenButton.Draggable = true
+OpenButton.Parent = ScreenGui
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(0, 15)
+OpenCorner.Parent = OpenButton
+
+local OpenStroke = Instance.new("UIStroke")
+OpenStroke.Color = Color3.fromRGB(100, 150, 255)
+OpenStroke.Thickness = 3
+OpenStroke.Parent = OpenButton
+
+-- ═══════════════════════════════════════
+-- 📱 КОМПАКТНОЕ МЕНЮ
+-- ═══════════════════════════════════════
+
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 420)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.Size = UDim2.new(0, 280, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
--- Закругление углов
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
--- Тень
-local Shadow = Instance.new("ImageLabel")
-Shadow.Name = "Shadow"
-Shadow.Size = UDim2.new(1, 30, 1, 30)
-Shadow.Position = UDim2.new(0, -15, 0, -15)
-Shadow.BackgroundTransparency = 1
-Shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Shadow.ImageTransparency = 0.5
-Shadow.ScaleType = Enum.ScaleType.Slice
-Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-Shadow.Parent = MainFrame
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(100, 150, 255)
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
 
 -- Заголовок
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Size = UDim2.new(1, 0, 0, 50)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 12)
-TitleCorner.Parent = TitleBar
-
--- Фикс для нижних углов заголовка
-local TitleFix = Instance.new("Frame")
-TitleFix.Size = UDim2.new(1, 0, 0, 12)
-TitleFix.Position = UDim2.new(0, 0, 1, -12)
-TitleFix.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-TitleFix.BorderSizePixel = 0
-TitleFix.Parent = TitleBar
-
 local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, -60, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Size = UDim2.new(1, -60, 0, 40)
+Title.Position = UDim2.new(0, 15, 0, 5)
 Title.BackgroundTransparency = 1
-Title.Text = "🎯 Hitbox Expander"
+Title.Text = "⭐ HITBOX HUB"
 Title.Font = Enum.Font.GothamBold
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TitleBar
+Title.Parent = MainFrame
 
 -- Кнопка закрытия
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.Size = UDim2.new(0, 40, 0, 40)
-CloseButton.Position = UDim2.new(1, -45, 0, 5)
-CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-CloseButton.Text = "✕"
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextSize = 20
-CloseButton.Parent = TitleBar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 35, 0, 35)
+CloseBtn.Position = UDim2.new(1, -40, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Text = "✕"
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Parent = MainFrame
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(0, 8)
-CloseCorner.Parent = CloseButton
+CloseCorner.Parent = CloseBtn
 
--- Контейнер для элементов
-local Container = Instance.new("ScrollingFrame")
-Container.Name = "Container"
-Container.Size = UDim2.new(1, -20, 1, -70)
-Container.Position = UDim2.new(0, 10, 0, 60)
-Container.BackgroundTransparency = 1
-Container.BorderSizePixel = 0
-Container.ScrollBarThickness = 4
-Container.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 105)
-Container.CanvasSize = UDim2.new(0, 0, 0, 0)
-Container.Parent = MainFrame
+-- ═══════════════════════════════════════
+-- 🎯 ПЕРЕКЛЮЧАТЕЛЬ HITBOX
+-- ═══════════════════════════════════════
 
-local ContainerList = Instance.new("UIListLayout")
-ContainerList.Padding = UDim.new(0, 10)
-ContainerList.SortOrder = Enum.SortOrder.LayoutOrder
-ContainerList.Parent = Container
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Size = UDim2.new(1, -30, 0, 45)
+ToggleFrame.Position = UDim2.new(0, 15, 0, 50)
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ToggleFrame.BorderSizePixel = 0
+ToggleFrame.Parent = MainFrame
 
--- Функция создания переключателя
-local function CreateToggle(name, defaultValue, callback)
-    local ToggleFrame = Instance.new("Frame")
-    ToggleFrame.Name = name.."Toggle"
-    ToggleFrame.Size = UDim2.new(1, 0, 0, 45)
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    ToggleFrame.BorderSizePixel = 0
-    ToggleFrame.Parent = Container
-    
-    local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(0, 8)
-    ToggleCorner.Parent = ToggleFrame
-    
-    local ToggleLabel = Instance.new("TextLabel")
-    ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
-    ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
-    ToggleLabel.BackgroundTransparency = 1
-    ToggleLabel.Text = name
-    ToggleLabel.Font = Enum.Font.Gotham
-    ToggleLabel.TextColor3 = Color3.fromRGB(200, 200, 205)
-    ToggleLabel.TextSize = 14
-    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    ToggleLabel.Parent = ToggleFrame
-    
-    local ToggleButton = Instance.new("TextButton")
-    ToggleButton.Size = UDim2.new(0, 50, 0, 25)
-    ToggleButton.Position = UDim2.new(1, -60, 0.5, -12.5)
-    ToggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
-    ToggleButton.Text = ""
-    ToggleButton.Parent = ToggleFrame
-    
-    local ToggleBtnCorner = Instance.new("UICorner")
-    ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
-    ToggleBtnCorner.Parent = ToggleButton
-    
-    local ToggleCircle = Instance.new("Frame")
-    ToggleCircle.Size = UDim2.new(0, 19, 0, 19)
-    ToggleCircle.Position = defaultValue and UDim2.new(1, -22, 0.5, -9.5) or UDim2.new(0, 3, 0.5, -9.5)
-    ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleCircle.BorderSizePixel = 0
-    ToggleCircle.Parent = ToggleButton
-    
-    local CircleCorner = Instance.new("UICorner")
-    CircleCorner.CornerRadius = UDim.new(1, 0)
-    CircleCorner.Parent = ToggleCircle
-    
-    local toggled = defaultValue
-    
-    ToggleButton.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        callback(toggled)
-        
-        local colorTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
-            BackgroundColor3 = toggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
-        })
-        
-        local positionTween = TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {
-            Position = toggled and UDim2.new(1, -22, 0.5, -9.5) or UDim2.new(0, 3, 0.5, -9.5)
-        })
-        
-        colorTween:Play()
-        positionTween:Play()
-    end)
-    
-    return ToggleButton
-end
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleFrame
 
--- Функция создания слайдера
-local function CreateSlider(name, min, max, defaultValue, callback)
-    local SliderFrame = Instance.new("Frame")
-    SliderFrame.Name = name.."Slider"
-    SliderFrame.Size = UDim2.new(1, 0, 0, 60)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    SliderFrame.BorderSizePixel = 0
-    SliderFrame.Parent = Container
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Size = UDim2.new(1, -70, 1, 0)
+ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Text = "🎯 Включить Hitbox"
+ToggleLabel.Font = Enum.Font.Gotham
+ToggleLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+ToggleLabel.TextSize = 15
+ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+ToggleLabel.Parent = ToggleFrame
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 50, 0, 26)
+ToggleBtn.Position = UDim2.new(1, -55, 0.5, -13)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+ToggleBtn.Text = ""
+ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Parent = ToggleFrame
+
+local ToggleBtnCorner = Instance.new("UICorner")
+ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
+ToggleBtnCorner.Parent = ToggleBtn
+
+local Circle = Instance.new("Frame")
+Circle.Size = UDim2.new(0, 20, 0, 20)
+Circle.Position = UDim2.new(0, 3, 0.5, -10)
+Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Circle.BorderSizePixel = 0
+Circle.Parent = ToggleBtn
+
+local CircleCorner = Instance.new("UICorner")
+CircleCorner.CornerRadius = UDim.new(1, 0)
+CircleCorner.Parent = Circle
+
+-- ═══════════════════════════════════════
+-- 👁️ ПОКАЗАТЬ ХИТБОКС
+-- ═══════════════════════════════════════
+
+local ShowFrame = Instance.new("Frame")
+ShowFrame.Size = UDim2.new(1, -30, 0, 45)
+ShowFrame.Position = UDim2.new(0, 15, 0, 105)
+ShowFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ShowFrame.BorderSizePixel = 0
+ShowFrame.Parent = MainFrame
+
+local ShowCorner = Instance.new("UICorner")
+ShowCorner.CornerRadius = UDim.new(0, 8)
+ShowCorner.Parent = ShowFrame
+
+local ShowLabel = Instance.new("TextLabel")
+ShowLabel.Size = UDim2.new(1, -70, 1, 0)
+ShowLabel.Position = UDim2.new(0, 15, 0, 0)
+ShowLabel.BackgroundTransparency = 1
+ShowLabel.Text = "👁️ Показать квадрат"
+ShowLabel.Font = Enum.Font.Gotham
+ShowLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+ShowLabel.TextSize = 15
+ShowLabel.TextXAlignment = Enum.TextXAlignment.Left
+ShowLabel.Parent = ShowFrame
+
+local ShowBtn = Instance.new("TextButton")
+ShowBtn.Size = UDim2.new(0, 50, 0, 26)
+ShowBtn.Position = UDim2.new(1, -55, 0.5, -13)
+ShowBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+ShowBtn.Text = ""
+ShowBtn.BorderSizePixel = 0
+ShowBtn.Parent = ShowFrame
+
+local ShowBtnCorner = Instance.new("UICorner")
+ShowBtnCorner.CornerRadius = UDim.new(1, 0)
+ShowBtnCorner.Parent = ShowBtn
+
+local ShowCircle = Instance.new("Frame")
+ShowCircle.Size = UDim2.new(0, 20, 0, 20)
+ShowCircle.Position = UDim2.new(0, 3, 0.5, -10)
+ShowCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ShowCircle.BorderSizePixel = 0
+ShowCircle.Parent = ShowBtn
+
+local ShowCircleCorner = Instance.new("UICorner")
+ShowCircleCorner.CornerRadius = UDim.new(1, 0)
+ShowCircleCorner.Parent = ShowCircle
+
+-- ═══════════════════════════════════════
+-- 📏 СЛАЙДЕР РАЗМЕРА
+-- ═══════════════════════════════════════
+
+local SliderFrame = Instance.new("Frame")
+SliderFrame.Size = UDim2.new(1, -30, 0, 55)
+SliderFrame.Position = UDim2.new(0, 15, 0, 160)
+SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SliderFrame.BorderSizePixel = 0
+SliderFrame.Parent = MainFrame
+
+local SliderCorner = Instance.new("UICorner")
+SliderCorner.CornerRadius = UDim.new(0, 8)
+SliderCorner.Parent = SliderFrame
+
+local SliderLabel = Instance.new("TextLabel")
+SliderLabel.Size = UDim2.new(1, -60, 0, 20)
+SliderLabel.Position = UDim2.new(0, 15, 0, 8)
+SliderLabel.BackgroundTransparency = 1
+SliderLabel.Text = "📏 Размер"
+SliderLabel.Font = Enum.Font.Gotham
+SliderLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+SliderLabel.TextSize = 15
+SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+SliderLabel.Parent = SliderFrame
+
+local ValueLabel = Instance.new("TextLabel")
+ValueLabel.Size = UDim2.new(0, 50, 0, 20)
+ValueLabel.Position = UDim2.new(1, -60, 0, 8)
+ValueLabel.BackgroundTransparency = 1
+ValueLabel.Text = tostring(Settings.Size)
+ValueLabel.Font = Enum.Font.GothamBold
+ValueLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+ValueLabel.TextSize = 15
+ValueLabel.Parent = SliderFrame
+
+local SliderBar = Instance.new("Frame")
+SliderBar.Size = UDim2.new(1, -30, 0, 6)
+SliderBar.Position = UDim2.new(0, 15, 1, -15)
+SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+SliderBar.BorderSizePixel = 0
+SliderBar.Parent = SliderFrame
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(1, 0)
+BarCorner.Parent = SliderBar
+
+local Fill = Instance.new("Frame")
+Fill.Size = UDim2.new((Settings.Size - 5) / 45, 0, 1, 0)
+Fill.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+Fill.BorderSizePixel = 0
+Fill.Parent = SliderBar
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(1, 0)
+FillCorner.Parent = Fill
+
+local SliderBtn = Instance.new("TextButton")
+SliderBtn.Size = UDim2.new(1, 0, 1, 20)
+SliderBtn.Position = UDim2.new(0, 0, 0, -10)
+SliderBtn.BackgroundTransparency = 1
+SliderBtn.Text = ""
+SliderBtn.Parent = SliderBar
+
+-- ═══════════════════════════════════════
+-- 🎮 ЛОГИКА КНОПОК
+-- ═══════════════════════════════════════
+
+-- Открытие/Закрытие меню
+OpenButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
     
-    local SliderCorner = Instance.new("UICorner")
-    SliderCorner.CornerRadius = UDim.new(0, 8)
-    SliderCorner.Parent = SliderFrame
-    
-    local SliderLabel = Instance.new("TextLabel")
-    SliderLabel.Size = UDim2.new(1, -30, 0, 20)
-    SliderLabel.Position = UDim2.new(0, 15, 0, 8)
-    SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Text = name
-    SliderLabel.Font = Enum.Font.Gotham
-    SliderLabel.TextColor3 = Color3.fromRGB(200, 200, 205)
-    SliderLabel.TextSize = 14
-    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SliderLabel.Parent = SliderFrame
-    
-    local SliderValue = Instance.new("TextLabel")
-    SliderValue.Size = UDim2.new(0, 50, 0, 20)
-    SliderValue.Position = UDim2.new(1, -65, 0, 8)
-    SliderValue.BackgroundTransparency = 1
-    SliderValue.Text = tostring(defaultValue)
-    SliderValue.Font = Enum.Font.GothamBold
-    SliderValue.TextColor3 = Color3.fromRGB(0, 200, 100)
-    SliderValue.TextSize = 14
-    SliderValue.TextXAlignment = Enum.TextXAlignment.Right
-    SliderValue.Parent = SliderFrame
-    
-    local SliderBar = Instance.new("Frame")
-    SliderBar.Size = UDim2.new(1, -30, 0, 6)
-    SliderBar.Position = UDim2.new(0, 15, 1, -18)
-    SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    SliderBar.BorderSizePixel = 0
-    SliderBar.Parent = SliderFrame
-    
-    local BarCorner = Instance.new("UICorner")
-    BarCorner.CornerRadius = UDim.new(1, 0)
-    BarCorner.Parent = SliderBar
-    
-    local SliderFill = Instance.new("Frame")
-    SliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
-    SliderFill.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-    SliderFill.BorderSizePixel = 0
-    SliderFill.Parent = SliderBar
-    
-    local FillCorner = Instance.new("UICorner")
-    FillCorner.CornerRadius = UDim.new(1, 0)
-    FillCorner.Parent = SliderFill
-    
-    local SliderButton = Instance.new("TextButton")
-    SliderButton.Size = UDim2.new(1, 0, 1, 0)
-    SliderButton.BackgroundTransparency = 1
-    SliderButton.Text = ""
-    SliderButton.Parent = SliderBar
-    
-    local dragging = false
-    
-    local function updateSlider(input)
-        local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-        local value = math.floor(min + (max - min) * pos)
-        
-        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
-        SliderValue.Text = tostring(value)
-        callback(value)
+    if MainFrame.Visible then
+        MainFrame.Size = UDim2.new(0, 0, 0, 0)
+        MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 280, 0, 220),
+            Position = UDim2.new(0.5, -140, 0.5, -110)
+        }):Play()
     end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    TweenService:Create(MainFrame, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    task.wait(0.2)
+    MainFrame.Visible = false
+end)
+
+-- Переключатель Hitbox
+ToggleBtn.MouseButton1Click:Connect(function()
+    Settings.Enabled = not Settings.Enabled
     
-    SliderButton.MouseButton1Down:Connect(function()
-        dragging = true
-    end)
+    TweenService:Create(ToggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Settings.Enabled and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(60, 60, 70)
+    }):Play()
     
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
+    TweenService:Create(Circle, TweenInfo.new(0.2), {
+        Position = Settings.Enabled and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
+    }):Play()
+end)
+
+-- Показать квадрат
+ShowBtn.MouseButton1Click:Connect(function()
+    Settings.ShowBox = not Settings.ShowBox
     
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateSlider(input)
-        end
-    end)
+    TweenService:Create(ShowBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Settings.ShowBox and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(60, 60, 70)
+    }):Play()
     
-    SliderButton.MouseButton1Click:Connect(function(x, y)
-        updateSlider({Position = Vector2.new(x, y)})
-    end)
+    TweenService:Create(ShowCircle, TweenInfo.new(0.2), {
+        Position = Settings.ShowBox and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
+    }):Play()
+end)
+
+-- Слайдер
+local dragging = false
+
+local function updateSlider(input)
+    local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+    local value = math.floor(5 + 45 * pos)
     
-    return SliderFrame
+    Settings.Size = value
+    Fill.Size = UDim2.new(pos, 0, 1, 0)
+    ValueLabel.Text = tostring(value)
 end
 
--- Создание элементов управления
-CreateToggle("Включить Hitbox", Settings.Enabled, function(value)
-    Settings.Enabled = value
+SliderBtn.MouseButton1Down:Connect(function()
+    dragging = true
 end)
 
-CreateToggle("Показать квадрат", Settings.ShowBox, function(value)
-    Settings.ShowBox = value
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
 end)
 
-CreateToggle("Проверка команды", Settings.TeamCheck, function(value)
-    Settings.TeamCheck = value
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateSlider(input)
+    end
 end)
 
-CreateSlider("Размер хитбокса", 5, 50, Settings.HitboxSize, function(value)
-    Settings.HitboxSize = value
-end)
+-- ═══════════════════════════════════════
+-- 💫 HITBOX СИСТЕМА
+-- ═══════════════════════════════════════
 
-CreateSlider("Прозрачность", 0, 100, Settings.Transparency * 100, function(value)
-    Settings.Transparency = value / 100
-end)
-
--- Обновление размера canvas
-ContainerList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    Container.CanvasSize = UDim2.new(0, 0, 0, ContainerList.AbsoluteContentSize.Y + 10)
-end)
-
--- Кнопка закрытия
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- Хранилище оригинальных размеров
-local OriginalSizes = {}
 local HitboxParts = {}
 
--- Функция применения хитбокса
-local function ApplyHitbox(character)
+local function UpdateHitbox(character)
     if not character then return end
     
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
     
-    -- Сохраняем оригинальный размер
-    if not OriginalSizes[character] then
-        OriginalSizes[character] = humanoidRootPart.Size
+    -- Удаляем старый визуал
+    if HitboxParts[character] then
+        HitboxParts[character]:Destroy()
+        HitboxParts[character] = nil
     end
     
-    -- Расширяем хитбокс
     if Settings.Enabled then
-        humanoidRootPart.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
-        humanoidRootPart.Transparency = 1
-        humanoidRootPart.CanCollide = false
+        -- Увеличиваем хитбокс
+        hrp.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+        hrp.Transparency = 1
+        hrp.CanCollide = false
+        hrp.Massless = true
         
-        -- Создаем визуальный куб
-        if Settings.ShowBox and not HitboxParts[character] then
-            local part = Instance.new("Part")
-            part.Name = "HitboxVisual"
-            part.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
-            part.Transparency = Settings.Transparency
-            part.Color = Settings.Color
-            part.Material = Enum.Material.Neon
-            part.CanCollide = false
-            part.Anchored = false
-            part.Parent = character
+        -- Показываем визуал
+        if Settings.ShowBox then
+            local box = Instance.new("Part")
+            box.Name = "HitboxVis"
+            box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+            box.CFrame = hrp.CFrame
+            box.Transparency = 0.7
+            box.Color = Color3.fromRGB(255, 0, 0)
+            box.Material = Enum.Material.Neon
+            box.CanCollide = false
+            box.Anchored = false
+            box.Massless = true
+            box.Parent = character
             
             local weld = Instance.new("WeldConstraint")
-            weld.Part0 = humanoidRootPart
-            weld.Part1 = part
-            weld.Parent = part
+            weld.Part0 = hrp
+            weld.Part1 = box
+            weld.Parent = box
             
-            HitboxParts[character] = part
-        elseif HitboxParts[character] then
-            HitboxParts[character].Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
-            HitboxParts[character].Transparency = Settings.Transparency
-            HitboxParts[character].Visible = Settings.ShowBox
+            HitboxParts[character] = box
         end
     else
-        -- Восстанавливаем оригинальный размер
-        if OriginalSizes[character] then
-            humanoidRootPart.Size = OriginalSizes[character]
-            humanoidRootPart.Transparency = 1
-            humanoidRootPart.CanCollide = false
-        end
-        
-        -- Удаляем визуальный куб
-        if HitboxParts[character] then
-            HitboxParts[character]:Destroy()
-            HitboxParts[character] = nil
-        end
+        -- Возвращаем стандартный размер
+        hrp.Size = Vector3.new(2, 2, 1)
+        hrp.Transparency = 1
     end
 end
 
--- Основной цикл
-RunService.RenderStepped:Connect(function()
+-- Обновление хитбоксов
+RunService.Heartbeat:Connect(function()
+    if not Settings.Enabled then return end
+    
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if Settings.TeamCheck then
-                if player.Team ~= LocalPlayer.Team then
-                    ApplyHitbox(player.Character)
+        if player ~= LocalPlayer and player.Character then
+            local character = player.Character
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                -- Обновляем размер
+                if hrp.Size ~= Vector3.new(Settings.Size, Settings.Size, Settings.Size) then
+                    hrp.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+                    hrp.Transparency = 1
+                    hrp.CanCollide = false
+                    hrp.Massless = true
                 end
-            else
-                ApplyHitbox(player.Character)
+                
+                -- Обновляем визуал
+                if Settings.ShowBox then
+                    if not HitboxParts[character] or not HitboxParts[character].Parent then
+                        UpdateHitbox(character)
+                    else
+                        local box = HitboxParts[character]
+                        if box.Size ~= Vector3.new(Settings.Size, Settings.Size, Settings.Size) then
+                            box.Size = Vector3.new(Settings.Size, Settings.Size, Settings.Size)
+                        end
+                    end
+                else
+                    if HitboxParts[character] then
+                        HitboxParts[character]:Destroy()
+                        HitboxParts[character] = nil
+                    end
+                end
             end
         end
     end
 end)
 
--- Обработка новых игроков
+-- Новые игроки
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
-        wait(1)
-        if Settings.TeamCheck then
-            if player.Team ~= LocalPlayer.Team then
-                ApplyHitbox(character)
-            end
-        else
-            ApplyHitbox(character)
+        task.wait(1)
+        if Settings.Enabled then
+            UpdateHitbox(character)
         end
     end)
 end)
 
--- Очистка при выходе
+-- Очистка
 Players.PlayerRemoving:Connect(function(player)
-    if player.Character then
-        OriginalSizes[player.Character] = nil
-        if HitboxParts[player.Character] then
-            HitboxParts[player.Character]:Destroy()
-            HitboxParts[player.Character] = nil
-        end
+    if player.Character and HitboxParts[player.Character] then
+        HitboxParts[player.Character]:Destroy()
+        HitboxParts[player.Character] = nil
     end
 end)
 
-print("✅ Hitbox Expander загружен!")
+-- Уведомление
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "⭐ STAR HITBOX HUB";
+    Text = "Загружено! Нажми на звезду";
+    Duration = 3;
+})
+
+print("⭐ STAR HITBOX HUB загружен!")
